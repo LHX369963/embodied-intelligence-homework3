@@ -5,7 +5,6 @@ import json
 import math
 from pathlib import Path
 import random
-import time
 import numpy as np
 import pyarrow.parquet as pq
 import torch
@@ -28,9 +27,25 @@ def seed_all():
     torch.set_num_threads(4)
 
 
-def sync():
-    if DEVICE.type == 'cuda':
-        torch.cuda.synchronize()
+class EarlyStopping:
+    """验证损失连续 patience 次评估保持在历史最低值以上时停止。"""
+    def __init__(self, patience=2, best=float('inf')):
+        self.patience = patience
+        self.best = best
+        self.bad_checks = 0
+
+    def update(self, loss):
+        improved = loss < self.best
+        if improved:
+            self.best = loss
+            self.bad_checks = 0
+        else:
+            self.bad_checks += 1
+        return improved
+
+    @property
+    def should_stop(self):
+        return self.bad_checks >= self.patience
 
 
 def write_json(name, value):
@@ -60,15 +75,16 @@ def language_evaluate(model, tokens, batch_size=64):
                 omitted_tail_tokens=len(tokens) - 1 - count)
 
 
-def pretrain(steps=2500):
+def pretrain(steps=20000):
     seed_all()
     CHECKPOINTS.mkdir(exist_ok=True)
     tokenizer = Tokenizer.from_file(str(ROOT / 'tokenizer.json'))
     config = Config(vocab_size=tokenizer.get_vocab_size())
     model = GPT(config).to(DEVICE)
     train, val = read_tokens('train'), read_tokens('validation')
-    settings = dict(seed=SEED, steps=steps, batch_size=64, context=config.context,
+    settings = dict(seed=SEED, max_steps=steps, batch_size=64, context=config.context,
                     peak_lr=6e-4, minimum_lr=6e-5, warmup_steps=100,
+                    lr_decay_steps=2500, validation_interval=250, patience=2,
                     weight_decay=0.1, grad_clip=1.0, optimizer='AdamW', precision='float32')
     optimizer = torch.optim.AdamW(model.parameters(), lr=settings['peak_lr'],
                                   betas=(0.9, 0.95), weight_decay=0.1)
@@ -89,18 +105,18 @@ def pretrain(steps=2500):
         return values
     record['initial_generation'] = samples()
     torch.manual_seed(SEED + 1)
-    best = initial['loss']
-    save_gpt(model, CHECKPOINTS / 'pretrained.pt', step=0, validation_loss=best)
+    stopper = EarlyStopping(patience=settings['patience'], best=initial['loss'])
+    save_gpt(model, CHECKPOINTS / 'pretrained.pt', step=0, validation_loss=stopper.best)
     rolling = []
-    sync()
-    begin = time.perf_counter()
+    record['stop_reason'] = 'max_steps'
     print('PRETRAIN', record['parameters'], 'parameters', flush=True)
     for step in range(1, steps + 1):
         model.train()
         if step <= 100:
             rate = settings['peak_lr'] * step / 100
         else:
-            ratio = (step - 100) / max(1, steps - 100)
+            # 保持原学习率计划：第2500步降至下限，之后维持下限。
+            ratio = min(1.0, (step - 100) / (settings['lr_decay_steps'] - 100))
             rate = settings['minimum_lr'] + 0.5 * (settings['peak_lr'] - settings['minimum_lr']) * (1 + math.cos(math.pi * ratio))
         for group in optimizer.param_groups:
             group['lr'] = rate
@@ -119,15 +135,18 @@ def pretrain(steps=2500):
             row = dict(step=step, train_loss=sum(rolling[-250:]) / len(rolling[-250:]),
                        validation_loss=metrics['loss'], validation_perplexity=metrics['perplexity'],
                        learning_rate=rate)
+            if stopper.update(metrics['loss']):
+                save_gpt(model, CHECKPOINTS / 'pretrained.pt', step=step, validation_loss=stopper.best)
+            row['bad_checks'] = stopper.bad_checks
             record['history'].append(row)
-            if metrics['loss'] < best:
-                best = metrics['loss']
-                save_gpt(model, CHECKPOINTS / 'pretrained.pt', step=step, validation_loss=best)
             write_json('pretraining.json', record)
             print('VALIDATION', json.dumps(row), flush=True)
-    sync()
-    record['elapsed_seconds'] = time.perf_counter() - begin
-    record['sampled_training_tokens'] = steps * 64 * config.context
+            if stopper.should_stop:
+                record['stop_reason'] = 'validation_early_stopping'
+                print('EARLY STOP PRETRAIN', step, flush=True)
+                break
+    record['stopped_step'] = step
+    record['sampled_training_tokens'] = step * 64 * config.context
     model, saved = load_gpt(CHECKPOINTS / 'pretrained.pt', DEVICE)
     record['selected_step'] = saved['step']
     record['validation'] = language_evaluate(model, val)
@@ -191,11 +210,11 @@ def classify_evaluate(model, dataset):
     return metrics, predictions, probabilities
 
 
-def finetune(epochs=6):
+def finetune(epochs=50):
     tokenizer = Tokenizer.from_file(str(ROOT / 'tokenizer.json'))
     config = Config(vocab_size=tokenizer.get_vocab_size())
     datasets = encode_reviews(tokenizer, config.context)
-    record = dict(seed=SEED, epochs=epochs, batch_size=64, backbone_lr=2e-4,
+    record = dict(seed=SEED, max_epochs=epochs, patience=2, batch_size=64, backbone_lr=2e-4,
                   head_lr=1e-3, weight_decay=0.01, grad_clip=1.0,
                   classification_pooling='last real token (EOS)',
                   truncated={k:v['truncated'] for k,v in datasets.items()}, variants={})
@@ -218,8 +237,8 @@ def finetune(epochs=6):
         optimizer = torch.optim.AdamW(groups, weight_decay=0.01)
         variant = dict(history=[], initial_validation=classify_evaluate(model, val)[0],
                        trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad))
-        best = float('inf')
-        begin = time.perf_counter()
+        stopper = EarlyStopping(patience=record['patience'])
+        variant['stop_reason'] = 'max_epochs'
         for epoch in range(1, epochs + 1):
             model.train()
             if name == 'frozen':
@@ -238,14 +257,17 @@ def finetune(epochs=6):
                 losses += loss.item() * len(indices)
                 count += len(indices)
             metrics = classify_evaluate(model, val)[0]
-            variant['history'].append(dict(epoch=epoch, train_loss=losses/count, **metrics))
-            if metrics['loss'] < best:
-                best = metrics['loss']
+            if stopper.update(metrics['loss']):
                 torch.save(dict(config=asdict(config), model=model.state_dict(), epoch=epoch,
-                                validation_loss=best, variant=name), CHECKPOINTS / f'{name}.pt')
+                                validation_loss=stopper.best, variant=name), CHECKPOINTS / f'{name}.pt')
+            variant['history'].append(dict(epoch=epoch, train_loss=losses/count,
+                                           bad_checks=stopper.bad_checks, **metrics))
             print('FINETUNE', name, epoch, json.dumps(metrics), flush=True)
-        sync()
-        variant['elapsed_seconds'] = time.perf_counter() - begin
+            if stopper.should_stop:
+                variant['stop_reason'] = 'validation_early_stopping'
+                print('EARLY STOP FINETUNE', name, epoch, flush=True)
+                break
+        variant['stopped_epoch'] = epoch
         saved = torch.load(CHECKPOINTS / f'{name}.pt', map_location=DEVICE, weights_only=False)
         model.load_state_dict(saved['model'])
         variant['selected_epoch'] = saved['epoch']
@@ -259,31 +281,14 @@ def finetune(epochs=6):
         record['variants'][name] = variant
         write_json('finetuning.json', record)
         print('TEST', name, json.dumps(metrics), flush=True)
-    # 用主模型实测单条推理，包含分词、张量创建和同步计算。
-    saved = torch.load(CHECKPOINTS / 'full.pt', map_location='cpu', weights_only=False)
-    cpu_model = SentimentModel(GPT(config)).eval()
-    cpu_model.load_state_dict(saved['model'])
-    text = 'A moving and beautifully acted film.'
-    content = tokenizer.encode(text).ids[:127] + [1]
-    ids, lengths = torch.tensor([content]), torch.tensor([len(content)])
-    with torch.no_grad():
-        for _ in range(3):
-            cpu_model(ids, lengths)
-        begin = time.perf_counter()
-        for _ in range(30):
-            content = tokenizer.encode(text).ids[:127] + [1]
-            output = cpu_model(torch.tensor([content]), torch.tensor([len(content)]))
-        seconds = (time.perf_counter() - begin) / 30
-    record['cpu_inference'] = dict(text=text, prediction=int(output.argmax(-1)),
-                                   latency_ms=seconds*1000, repetitions=30, threads=4)
     write_json('finetuning.json', record)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('stage', choices=['pretrain','finetune','all'])
-    parser.add_argument('--steps', type=int, default=2500)
-    parser.add_argument('--epochs', type=int, default=6)
+    parser.add_argument('--steps', type=int, default=20000, help='预训练步数上限')
+    parser.add_argument('--epochs', type=int, default=50, help='监督训练轮数上限')
     args = parser.parse_args()
     if args.stage in ('pretrain', 'all'):
         pretrain(args.steps)

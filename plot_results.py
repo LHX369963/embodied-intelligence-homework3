@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
+from matplotlib.ticker import MaxNLocator
 import seaborn as sns
 from pathlib import Path
 import json
@@ -46,12 +47,11 @@ for name, label, color in [('frozen', '冻结预训练主干', COLORS[3]),
                            ('scratch', '随机初始化训练', COLORS[0]),
                            ('full', '预训练后全参数微调', COLORS[1])]:
     rows = finetuning['variants'][name]['history']
-    ax.plot([r['epoch'] for r in rows], [100*r['accuracy'] for r in rows],
+    ax.plot([r['epoch'] for r in rows], [r['loss'] for r in rows],
             marker='o', markersize=3, color=color, label=label)
 ax.set_xlabel('监督训练轮次', fontproperties=font_main)
-ax.set_ylabel('验证准确率 / %', fontproperties=font_main)
-ax.set_xticks(range(1, 7))
-ax.set_ylim(54, 77)
+ax.set_ylabel('验证交叉熵', fontproperties=font_main)
+ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
 ax.legend(prop=font_legend, loc='lower right', frameon=False)
 for label in ax.get_xticklabels() + ax.get_yticklabels():
     label.set_fontproperties(font_main)

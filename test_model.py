@@ -34,9 +34,19 @@ def run_tests():
     padded = torch.tensor([[3, 4, 1, 0, 0]])
     assert torch.allclose(classifier(short, torch.tensor([3])),
                           classifier(padded, torch.tensor([3])), atol=1e-6)
+    from experiment import EarlyStopping
+    stopper = EarlyStopping(patience=2)
+    for value in (1.0, 0.9, 0.91):
+        stopper.update(value)
+        assert not stopper.should_stop
+    stopper.update(0.92)
+    assert stopper.should_stop
+    stopper.update(0.8)
+    assert stopper.bad_checks == 0 and not stopper.should_stop
     result = dict(causal_max_difference=error, tied_embeddings=True,
                   loss_matches_cross_entropy=True, finite_gradients=True,
-                  save_load_consistent=True, right_padding_invariant=True)
+                  save_load_consistent=True, right_padding_invariant=True,
+                  early_stopping_counter_and_reset=True)
     Path(__file__).with_name('model_tests.json').write_text(json.dumps(result, indent=2))
     print(result, flush=True)
 
