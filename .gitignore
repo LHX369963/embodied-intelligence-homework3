@@ -3,4 +3,8 @@ __pycache__/
 data/
 checkpoints/
 *.log
+# 个人信息报告与本地绘图字体不发布到公开仓库。
+main.typ
+main.pdf
+assets/Times_New_Roman+SimSun.ttf
 

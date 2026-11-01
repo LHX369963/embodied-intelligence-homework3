@@ -6,6 +6,7 @@
     radius: 2pt,
   )
   show raw.where(block: true): block.with(
+    breakable: false,
     fill: luma(240),
     inset: 10pt,
     radius: 4pt,

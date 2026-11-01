@@ -26,4 +26,42 @@
 - 注意力论文：https://arxiv.org/abs/1706.03762 。
 - GPT-2 报告：https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf 。
 
-实验完成后，本文件补充运行命令与交付清单。报告章节将依照作业的五项要求排列。
+## 实测结果
+
+模型具有 4,240,896 个参数。预训练完成 2500 步，累计采样 20,480,000 个词元；按验证损失选择第 2500 步。相同分词器与上下文评价方式下，测试词元困惑度由随机初始化的 4306.96 降至 72.28。
+
+| 监督训练方式 | 选定轮次 | 测试准确率 | 宏 F1 |
+| --- | ---: | ---: | ---: |
+| 冻结预训练主干 | 6 | 59.57% | 0.5948 |
+| 随机主干全参数训练 | 2 | 73.73% | 0.7371 |
+| 预训练后全参数微调 | 1 | 70.54% | 0.7052 |
+
+各组均训练 6 轮，采用验证交叉熵最低的检查点。完整结果、逐条测试预测与超参数见 `pretraining.json`、`finetuning.json`。本次固定种子为 2026，表格展示该次运行，未作多种子统计。影评划分之间的完全相同文本数量均为零，见 `data_audit.json`。
+
+模型学得局部语言结构和文本分类能力；本次随机主干组分类表现高于预训练微调组。WikiText 通用语言建模目标与影评情感目标存在差异，全参数微调后期还出现验证损失上升。生成内容适合观察学习过程，事实信息需要另外核实。
+
+## 运行与推理
+
+使用现有 Python 环境安装 `requirements.txt` 中的软件包，无需下载外部预训练模型。实际训练环境的软件版本见 `environment.json`。
+
+```bash
+python -m pip install -r requirements.txt
+python test_model.py
+python prepare.py
+python experiment.py pretrain --steps 2500
+python experiment.py finetune --epochs 6
+python inference.py generate "The film was" --new-tokens 60
+python inference.py classify "A moving and beautifully acted film."
+```
+
+`prepare.py` 从官方数据集仓库下载六份 Parquet，在 WikiText 训练文本上拟合分词器，生成本地词元数组。`experiment.py` 自动选择可用加速设备，也支持 CPU。`inference.py` 默认使用 CPU；以 4 个线程连续测试 30 次单条分类，包含分词与张量构造的平均时间为 2.29 ms（示例文本和测量方法见结果及代码）。
+
+预训练模型接收英语文本并逐词元续写。分类模型接收一条影评并输出正负情感概率。分类任务使用新建的二分类头，生成任务继续使用预训练语言模型头。
+
+## 交付内容
+
+核心源代码为 `model.py`、`prepare.py`、`experiment.py`、`inference.py`、`test_model.py`，分词器为 `tokenizer.json`。`model_tests.json` 保存因果性、共享权重、梯度、保存加载与右侧填充等检查结果。`plot_results.py` 从实际结果生成图件，绘图另需 Matplotlib、Seaborn、Poppler 及可显示中文的字体；脚本使用 `assets/Times_New_Roman+SimSun.ttf`，该本地字体文件不在公开仓库分发。
+
+模型文件位于 `checkpoints/`：`pretrained.pt` 为语言模型，`full.pt` 为全参数微调模型；`scratch.pt` 与 `frozen.pt` 为对照模型。各文件约 16 MiB，作为 Release 附件分发，下载后放入 `checkpoints/` 即可。公开数据从上述来源下载，数据与模型权重不纳入 Git 历史。
+
+本地报告使用 `main.typ` 编写、`typst compile main.typ main.pdf` 编译。含个人信息的这两个报告文件保留本地；公开仓库提供源代码、结果和模型下载。
