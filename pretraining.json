@@ -1,0 +1,151 @@
+{
+  "config": {
+    "vocab_size": 4096,
+    "context": 128,
+    "width": 256,
+    "heads": 4,
+    "layers": 4,
+    "dropout": 0.1
+  },
+  "settings": {
+    "seed": 2026,
+    "steps": 2500,
+    "batch_size": 64,
+    "context": 128,
+    "peak_lr": 0.0006,
+    "minimum_lr": 6e-05,
+    "warmup_steps": 100,
+    "weight_decay": 0.1,
+    "grad_clip": 1.0,
+    "optimizer": "AdamW",
+    "precision": "float32"
+  },
+  "parameters": 4240896,
+  "initial_validation": {
+    "loss": 8.37039914182234,
+    "perplexity": 4317.358957356819,
+    "evaluated_tokens": 322688,
+    "omitted_tail_tokens": 56
+  },
+  "history": [
+    {
+      "step": 250,
+      "train_loss": 6.3187883167266845,
+      "validation_loss": 5.464503371115007,
+      "validation_perplexity": 236.15854282713227,
+      "learning_rate": 0.0005948120257088722
+    },
+    {
+      "step": 500,
+      "train_loss": 5.171351306915283,
+      "validation_loss": 4.957806119082798,
+      "validation_perplexity": 142.28130499850656,
+      "learning_rate": 0.0005638268590217985
+    },
+    {
+      "step": 750,
+      "train_loss": 4.79764475440979,
+      "validation_loss": 4.720469836439702,
+      "validation_perplexity": 112.22096578259165,
+      "learning_rate": 0.0005080233700770185
+    },
+    {
+      "step": 1000,
+      "train_loss": 4.584419940948487,
+      "validation_loss": 4.573605493343524,
+      "validation_perplexity": 96.89282718938416,
+      "learning_rate": 0.00043332452673857416
+    },
+    {
+      "step": 1250,
+      "train_loss": 4.437489315032959,
+      "validation_loss": 4.474814292411396,
+      "validation_perplexity": 87.77829780002627,
+      "learning_rate": 0.0003476588448921386
+    },
+    {
+      "step": 1500,
+      "train_loss": 4.330301404953003,
+      "validation_loss": 4.399313837987286,
+      "validation_perplexity": 81.39499934288293,
+      "learning_rate": 0.00026011885782231935
+    },
+    {
+      "step": 1750,
+      "train_loss": 4.245263666152954,
+      "validation_loss": 4.341625049255141,
+      "validation_perplexity": 76.83229420690992,
+      "learning_rate": 0.00017999603708470746
+    },
+    {
+      "step": 2000,
+      "train_loss": 4.1874396572113035,
+      "validation_loss": 4.306545109467013,
+      "validation_perplexity": 74.18374895947561,
+      "learning_rate": 0.00011579459812136652
+    },
+    {
+      "step": 2250,
+      "train_loss": 4.157320203781128,
+      "validation_loss": 4.278330352371621,
+      "validation_perplexity": 72.11992456515216,
+      "learning_rate": 7.432886503632149e-05
+    },
+    {
+      "step": 2500,
+      "train_loss": 4.12321475982666,
+      "validation_loss": 4.263677783733036,
+      "validation_perplexity": 71.07088673840495,
+      "learning_rate": 6e-05
+    }
+  ],
+  "initial_test": {
+    "loss": 8.367986733496977,
+    "perplexity": 4306.956277465352,
+    "evaluated_tokens": 367872,
+    "omitted_tail_tokens": 119
+  },
+  "initial_generation": [
+    {
+      "prompt": "The history of",
+      "text": "The history of riveraval ten Sl previous Enter Tropical Tropical 51ombuff operrap cat Card estimated estimatedé Hall Jordan�stitiment television largestould organector Companyeum\u0014 po consideredelling elementsilityilitylor Dam International contract contract division satenced 197 Cup8 something something special sameative Westowlersel meet recordingormruct Club services servicesicklands £elling manag focus Hurricane"
+    },
+    {
+      "prompt": "In the early years",
+      "text": "In the early years individual quest self winning Sc� like establections 1996 age age contains\u0015 ident farayingayingianoqitude Metections sk . govern riverrap termsirl behind if Liverpoolilities commented sal Mc necessanks Association operations level focus necess Spambhet allowisc Mich nec notes In however far viol Enter�henanguase after operationqir Al Mcidaesp Early"
+    },
+    {
+      "prompt": "The film was",
+      "text": "The film wasyle presence windsácend image super effectising Town June Junep th Sl Deperous Ukan wh Dam dramative 33 donegahemraw numerous done pute Bar pe general During the themselves lower pick ent farx�2 cover image later known in Aust reve prevorporuteranguullyached introdu communft,@her level Samrou Teutes howeverfield"
+    }
+  ],
+  "elapsed_seconds": 60.00608302798355,
+  "sampled_training_tokens": 20480000,
+  "selected_step": 2500,
+  "validation": {
+    "loss": 4.263677783733036,
+    "perplexity": 71.07088673840495,
+    "evaluated_tokens": 322688,
+    "omitted_tail_tokens": 56
+  },
+  "generation": [
+    {
+      "prompt": "The history of",
+      "text": "The history of which is now the \" brake of the \" Liberty \" . The Lincent of Chevaliers was also aired on the Lords of the Empire , which was to be completed , and a vaniced by the Fine Festival on 12 November , after he was granted by the Governor"
+    },
+    {
+      "prompt": "In the early years",
+      "text": "In the early years of the United States , he felt that the name was \" a \" hugg \" that it was \" a \" . \n = = = Charts and production = = = \n The episode was described as the \" unique \" , and not a \" long \" fantast \" . Bono wrote that \" Today was a"
+    },
+    {
+      "prompt": "The film was",
+      "text": "The film was designed by Llanell of Dunds. The Matthew Health on March 5 , 2003 . \n = = Critical reception = = \n While the song was released as an episode of the song of \" Girls \" . In 2004 , the song became the highest single for Best Wintendo album , released"
+    }
+  ],
+  "test": {
+    "loss": 4.280523280924862,
+    "perplexity": 72.27825194385456,
+    "evaluated_tokens": 367872,
+    "omitted_tail_tokens": 119
+  }
+}
