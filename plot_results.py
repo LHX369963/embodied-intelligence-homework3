@@ -43,16 +43,17 @@ plt.savefig(ROOT / 'assets/pretraining.pdf', bbox_inches='tight', pad_inches=0.0
 plt.close(fig)
 
 fig, ax = plt.subplots()
-for name, label, color in [('frozen', '冻结预训练主干', COLORS[3]),
-                           ('scratch', '随机初始化训练', COLORS[0]),
-                           ('full', '预训练后全参数微调', COLORS[1])]:
+for name, label, color in [('frozen', '冻结主干', COLORS[3]),
+                           ('scratch', '随机初始化', COLORS[0]),
+                           ('full', '全参数微调', COLORS[1])]:
     rows = finetuning['variants'][name]['history']
     ax.plot([r['epoch'] for r in rows], [r['loss'] for r in rows],
             marker='o', markersize=3, color=color, label=label)
 ax.set_xlabel('监督训练轮次', fontproperties=font_main)
 ax.set_ylabel('验证交叉熵', fontproperties=font_main)
 ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
-ax.legend(prop=font_legend, loc='lower right', frameon=False)
+ax.legend(prop=font_legend, loc='lower center', bbox_to_anchor=(0.5, 1.01),
+          ncol=3, columnspacing=0.8, handlelength=1.4, frameon=False)
 for label in ax.get_xticklabels() + ax.get_yticklabels():
     label.set_fontproperties(font_main)
 ax.spines[['top', 'right']].set_visible(False)
