@@ -1,0 +1,66 @@
+{
+  "sources": {
+    "wiki": "https://huggingface.co/datasets/Salesforce/wikitext",
+    "sentiment": "https://huggingface.co/datasets/cornell-movie-review-data/rotten_tomatoes"
+  },
+  "wiki": {
+    "train": {
+      "rows": 36718,
+      "characters": 10892990,
+      "tokens": 3083246
+    },
+    "validation": {
+      "rows": 3760,
+      "characters": 1142150,
+      "tokens": 322745
+    },
+    "test": {
+      "rows": 4358,
+      "characters": 1285622,
+      "tokens": 367992
+    }
+  },
+  "sentiment": {
+    "train": {
+      "examples": 8530,
+      "negative": 4265,
+      "positive": 4265
+    },
+    "validation": {
+      "examples": 1066,
+      "negative": 533,
+      "positive": 533
+    },
+    "test": {
+      "examples": 1066,
+      "negative": 533,
+      "positive": 533
+    }
+  },
+  "vocab_size": 4096,
+  "tokenization_example": {
+    "text": "Language models learn from text.",
+    "tokens": [
+      "L",
+      "angu",
+      "age",
+      "Ġmod",
+      "els",
+      "Ġlearn",
+      "Ġfrom",
+      "Ġtext",
+      "."
+    ],
+    "ids": [
+      46,
+      2263,
+      556,
+      1191,
+      1044,
+      2692,
+      405,
+      4038,
+      16
+    ]
+  }
+}
