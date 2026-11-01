@@ -58,7 +58,7 @@ python inference.py generate "The film was" --new-tokens 60
 python inference.py classify "A moving and beautifully acted film."
 ```
 
-`prepare.py` 从官方数据集仓库下载六份 Parquet，在 WikiText 训练文本上拟合分词器，生成本地词元数组。`experiment.py` 自动选择可用加速设备，也支持 CPU。`inference.py` 默认使用 CPU；以 4 个线程连续测试 30 次单条分类，包含分词与张量构造的平均时间为 2.29 ms（示例文本和测量方法见结果及代码）。
+`prepare.py` 从官方数据集仓库下载六份 Parquet，在 WikiText 训练文本上拟合分词器，生成本地词元数组。`experiment.py` 执行训练与验证选模，`inference.py` 加载选定模型完成文本生成或影评分类。
 
 预训练模型接收英语文本并逐词元续写。分类模型接收一条影评并输出正负情感概率。分类任务使用新建的二分类头，生成任务继续使用预训练语言模型头。
 
