@@ -4,5 +4,6 @@
   "loss_matches_cross_entropy": true,
   "finite_gradients": true,
   "save_load_consistent": true,
-  "right_padding_invariant": true
+  "right_padding_invariant": true,
+  "early_stopping_counter_and_reset": true
 }
