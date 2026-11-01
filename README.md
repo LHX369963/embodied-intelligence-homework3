@@ -1,5 +1,9 @@
 # 作业三：从零构建大模型
 
+源码与实验结果：<https://github.com/LHX369963/embodied-intelligence-homework3>
+
+模型权重发布页：<https://github.com/LHX369963/embodied-intelligence-homework3/releases/tag/submission>
+
 ## 一、知识点与实验设计
 
 自回归语言模型把序列概率分解为各位置条件概率的乘积，以前文预测下一个词元。预训练的标签来自原文右移一位，监督信号由文本自身构成。文本先经过字节级 BPE 分词，再查表获得词嵌入，与可学习的位置嵌入相加。
@@ -63,5 +67,15 @@ python inference.py classify "A moving and beautifully acted film."
 核心源代码为 `model.py`、`prepare.py`、`experiment.py`、`inference.py`、`test_model.py`，分词器为 `tokenizer.json`。`model_tests.json` 保存因果性、共享权重、梯度、保存加载与右侧填充等检查结果。`plot_results.py` 从实际结果生成图件，绘图另需 Matplotlib、Seaborn、Poppler 及可显示中文的字体；脚本使用 `assets/Times_New_Roman+SimSun.ttf`，该本地字体文件不在公开仓库分发。
 
 模型文件位于 `checkpoints/`：`pretrained.pt` 为语言模型，`full.pt` 为全参数微调模型；`scratch.pt` 与 `frozen.pt` 为对照模型。各文件约 16 MiB，作为 Release 附件分发，下载后放入 `checkpoints/` 即可。公开数据从上述来源下载，数据与模型权重不纳入 Git 历史。
+
+```bash
+mkdir -p checkpoints
+for name in pretrained full scratch frozen; do
+  curl -L "https://github.com/LHX369963/embodied-intelligence-homework3/releases/download/submission/$name.pt" \
+    -o "checkpoints/$name.pt"
+done
+```
+
+权重及结果固定对应本项目分词器与配置。`pretrained.pt` 用于续写，`full.pt` 用于主实验微调推理；`scratch.pt` 在本次分类测试中取得三组最高准确率，作为对照一并提供。
 
 本地报告使用 `main.typ` 编写、`typst compile main.typ main.pdf` 编译。含个人信息的这两个报告文件保留本地；公开仓库提供源代码、结果和模型下载。
