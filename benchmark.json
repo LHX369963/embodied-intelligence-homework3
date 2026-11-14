@@ -174,15 +174,6 @@
             "total": 579
           }
         }
-      },
-      "cpu_kv_cache_benchmark": {
-        "generated_tokens": 96,
-        "exact_token_match": true,
-        "kv_cached_seconds": 0.1146,
-        "kv_cached_tok_per_s": 837.45,
-        "uncached_seconds": 0.5689,
-        "uncached_tok_per_s": 168.74,
-        "speedup_ratio": 4.96
       }
     },
     "515m": {
@@ -371,16 +362,53 @@
             "total": 579
           }
         }
-      },
-      "cpu_kv_cache_benchmark": {
-        "generated_tokens": 96,
-        "exact_token_match": true,
-        "kv_cached_seconds": 3.1924,
-        "kv_cached_tok_per_s": 30.07,
-        "uncached_seconds": 14.6426,
-        "uncached_tok_per_s": 6.56,
-        "speedup_ratio": 4.59
       }
     }
+  },
+  "same_prompt_comparisons": {
+    "generation_seed_2026_temp_08_topk_40": [
+      {
+        "prompt": "The film was",
+        "random_init_515m": "The film was strateg Titich catap public7 glor excelled Scar glor reck Belizeatical energiesandra glorinement Libya recru likeness Libya Clif publish publish showcaseandra exaggeratedructive envoys Jewsonialonial",
+        "pretrained_4m": "The film was filmed in the 2010 film Fatal Films . The film was directed by Birka Badi , who was filmed in the Bolly Film Festival . A filming of Kumai had been released in Japan . In 2004 , the film became the cadets ' last film director , and the film",
+        "pretrained_515m": "The film was very good; I don't know why they filmed this with it. You'll be surprised by the music. One of the best \"control\" movies I have ever watched. It's not a great movie, it's just a drama, it's just a drama. I think it"
+      },
+      {
+        "prompt": "In the early years",
+        "pretrained_4m": "In the early years of the United States , he was founded by the British Columbia Association of America ( IMA ) . He was the first time to win the Dota 2 border in England , and his son of Saundon . FCA Cup semi @-@ finals , including two teammate Tests , Do",
+        "pretrained_515m": "In the early years of the 19th century , the German authorities had begun to establish a law court in the area , and the German courts were also created . The courts were eventually allowed to become law courts and courts . A few areas of the state of the Commonwealth were still part of the Commonwealth as part of the"
+      },
+      {
+        "prompt": "The history of",
+        "pretrained_4m": "The history of the world . The \" Anonymous Movie Convention \" version of the album is recorded on Baby One ; \" It 's the same song is about the same time , and was released around 15 years . \" Maneater \" was included on the song on the album , while \" Briday \" End G",
+        "pretrained_515m": "The history of the game is presented by the game 's developer , Tatsi Nojima . In addition to the three versions of the game , the two versions of the game are also adapted as downloadable content for the game ."
+      }
+    ],
+    "sentiment_test_set_head_to_head": [
+      {
+        "text": "not too fancy , not too filling , not too fluffy , but definitely tasty and sweet .",
+        "true_label": 1,
+        "full_4m_pos_prob": 0.115,
+        "full_515m_pos_prob": 0.893
+      },
+      {
+        "text": "leaves viewers out in the cold and undermines some phenomenal performances .",
+        "true_label": 0,
+        "full_4m_pos_prob": 0.916,
+        "full_515m_pos_prob": 0.146
+      },
+      {
+        "text": "the hanukkah spirit seems fried in pork .",
+        "true_label": 0,
+        "full_4m_pos_prob": 0.833,
+        "full_515m_pos_prob": 0.033
+      },
+      {
+        "text": "an energetic and engaging film that never pretends to be something it isn't .",
+        "true_label": 1,
+        "full_4m_pos_prob": 0.186,
+        "full_515m_pos_prob": 0.962
+      }
+    ]
   }
 }

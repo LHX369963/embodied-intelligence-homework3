@@ -1,11 +1,10 @@
-"""4.24M 与 515M GPT 跨规模公平横向评测：BPB/词级困惑度、BLiMP 语法最小对、零样本/少样本提示、2x3 监督矩阵与 KV 缓存加速比。"""
+"""4.24M 与 515M GPT 跨规模公平横向评测：BPB/词级困惑度、BLiMP 语法最小对、零样本/少样本提示与 2x3 监督矩阵。"""
 import argparse
 import json
 import math
 import os
 from pathlib import Path
 import subprocess
-import time
 import urllib.request
 import pyarrow.parquet as pq
 import torch
@@ -320,50 +319,14 @@ def eval_supervised_suite(ckpt_dir: Path, tokenizer: Tokenizer, device: str):
     return out
 
 
-@torch.no_grad()
-def eval_kv_cache_speedup(model_cpu: GPT, tokenizer: Tokenizer, gen_tokens: int = 96):
-    torch.set_num_threads(8)
-    prompt_ids = tokenizer.encode('The history of artificial intelligence began in the mid twentieth century').ids
-    x0 = torch.tensor([prompt_ids], dtype=torch.long)
-
-    # 预热一次消除首次分配开销
-    _ = model_cpu.generate(x0.clone(), new_tokens=4, temperature=0.0, eos_id=None)
-
-    # 1. 开启 KV 缓存的贪心生成
-    t0 = time.perf_counter()
-    cached_ids = model_cpu.generate(x0.clone(), new_tokens=gen_tokens, temperature=0.0, eos_id=None)
-    cached_sec = time.perf_counter() - t0
-
-    # 2. 关闭 KV 缓存的全序列重算贪心生成
-    ids = x0.clone()
-    t1 = time.perf_counter()
-    for _ in range(gen_tokens):
-        window = ids[:, -model_cpu.config.context:]
-        logits, _ = model_cpu(window)
-        nxt = logits[:, -1].argmax(dim=-1, keepdim=True)
-        ids = torch.cat((ids, nxt), dim=1)
-    uncached_sec = time.perf_counter() - t1
-
-    exact_match = bool(torch.equal(cached_ids, ids))
-    return dict(
-        generated_tokens=gen_tokens,
-        exact_token_match=exact_match,
-        kv_cached_seconds=round(cached_sec, 4),
-        kv_cached_tok_per_s=round(gen_tokens / max(cached_sec, 1e-6), 2),
-        uncached_seconds=round(uncached_sec, 4),
-        uncached_tok_per_s=round(gen_tokens / max(uncached_sec, 1e-6), 2),
-        speedup_ratio=round(uncached_sec / max(cached_sec, 1e-6), 2),
-    )
-
-
 def load_4m_tokenizer() -> Tokenizer:
     raw_json = subprocess.check_output(
-        ['git', '-C', str(ROOT), 'show', 'HEAD:tokenizer.json']
+        ['git', '-C', str(ROOT), 'show', '5c1d7ff:tokenizer.json']
     ).decode('utf-8')
     return Tokenizer.from_str(raw_json)
 
 
-def run_scale(scale: str, ckpt_dir: Path, device: str, run_cpu_speed: bool):
+def run_scale(scale: str, ckpt_dir: Path, device: str):
     if scale == '4m':
         tokenizer = load_4m_tokenizer()
     else:
@@ -393,13 +356,6 @@ def run_scale(scale: str, ckpt_dir: Path, device: str, run_cpu_speed: bool):
     supervised = eval_supervised_suite(ckpt_dir, tokenizer, device=device)
     print(f'[{scale}] 监督微调三组测试结果:', {k: v['accuracy'] for k, v in supervised.items()}, flush=True)
 
-    speed = None
-    if run_cpu_speed:
-        cpu_model, _ = load_gpt(ckpt_dir / 'pretrained.pt', device='cpu', dtype=torch.float32)
-        speed = eval_kv_cache_speedup(cpu_model, tokenizer, gen_tokens=96)
-        print(f'[{scale}] CPU KV-Cache 加速实测:', speed, flush=True)
-        del cpu_model
-
     return dict(
         parameters=params,
         vocab_size=tokenizer.get_vocab_size(),
@@ -409,7 +365,6 @@ def run_scale(scale: str, ckpt_dir: Path, device: str, run_cpu_speed: bool):
         blimp_zero_shot=blimp,
         sentiment_icl=icl,
         sentiment_supervised=supervised,
-        cpu_kv_cache_benchmark=speed,
     )
 
 
@@ -418,7 +373,6 @@ def main():
     parser.add_argument('--scale', choices=['4m', '515m'], required=True)
     parser.add_argument('--checkpoints', type=Path, default=ROOT / 'checkpoints')
     parser.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
-    parser.add_argument('--skip-cpu-speed', action='store_true')
     args = parser.parse_args()
 
     out_path = ROOT / 'benchmark.json'
@@ -427,7 +381,6 @@ def main():
         args.scale,
         ckpt_dir=args.checkpoints,
         device=args.device,
-        run_cpu_speed=not args.skip_cpu_speed,
     )
     out_path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
     print(f'已更新 {out_path}', flush=True)
