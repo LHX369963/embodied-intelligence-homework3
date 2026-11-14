@@ -1,0 +1,386 @@
+{
+  "models": {
+    "4m": {
+      "parameters": 4240896,
+      "vocab_size": 4096,
+      "config": {
+        "vocab_size": 4096,
+        "context": 128,
+        "width": 256,
+        "heads": 4,
+        "layers": 4,
+        "dropout": 0.1
+      },
+      "selected_pretrain_step": 19000,
+      "wikitext_test": {
+        "ctx_128": {
+          "window": 128,
+          "total_utf8_bytes": 1287656,
+          "total_words": 241211,
+          "total_tokens": 367992,
+          "evaluated_tokens": 367872,
+          "coverage": 0.999677,
+          "token_loss": 4.0264,
+          "token_perplexity": 56.06,
+          "bits_per_byte": 1.6601,
+          "word_perplexity": 465.32
+        }
+      },
+      "blimp_zero_shot": {
+        "macro_accuracy": 0.6554,
+        "total_correct": 3277,
+        "total_pairs": 5000,
+        "tasks": {
+          "regular_plural_subject_verb_agreement_1": {
+            "name": "主谓单复数一致",
+            "accuracy": 0.72,
+            "correct": 720,
+            "total": 1000
+          },
+          "determiner_noun_agreement_1": {
+            "name": "限定词名词一致",
+            "accuracy": 0.645,
+            "correct": 645,
+            "total": 1000
+          },
+          "anaphor_number_agreement": {
+            "name": "反身代词指代",
+            "accuracy": 0.636,
+            "correct": 636,
+            "total": 1000
+          },
+          "irregular_past_participle_verbs": {
+            "name": "不规则过去分词",
+            "accuracy": 0.656,
+            "correct": 656,
+            "total": 1000
+          },
+          "wh_questions_object_gap": {
+            "name": "疑问句宾语空位",
+            "accuracy": 0.62,
+            "correct": 620,
+            "total": 1000
+          }
+        }
+      },
+      "sentiment_icl": {
+        "zero_shot": {
+          "accuracy": 0.4934,
+          "roc_auc": 0.495,
+          "correct": 526,
+          "total": 1066
+        },
+        "four_shot": {
+          "accuracy": 0.4934,
+          "roc_auc": 0.4816,
+          "correct": 526,
+          "total": 1066
+        }
+      },
+      "sentiment_supervised": {
+        "frozen": {
+          "selected_epoch": 2,
+          "accuracy": 0.606,
+          "macro_f1": 0.6034,
+          "roc_auc": 0.6596,
+          "loss": 0.6568,
+          "confusion_matrix": [
+            [
+              366,
+              167
+            ],
+            [
+              253,
+              280
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.5838,
+            "correct": 202,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.6037,
+            "correct": 294,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.6079,
+            "correct": 352,
+            "total": 579
+          }
+        },
+        "scratch": {
+          "selected_epoch": 2,
+          "accuracy": 0.7364,
+          "macro_f1": 0.7362,
+          "roc_auc": 0.8149,
+          "loss": 0.5283,
+          "confusion_matrix": [
+            [
+              407,
+              126
+            ],
+            [
+              155,
+              378
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.7139,
+            "correct": 247,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7207,
+            "correct": 351,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.7496,
+            "correct": 434,
+            "total": 579
+          }
+        },
+        "full": {
+          "selected_epoch": 4,
+          "accuracy": 0.7167,
+          "macro_f1": 0.7127,
+          "roc_auc": 0.8131,
+          "loss": 0.5485,
+          "confusion_matrix": [
+            [
+              445,
+              88
+            ],
+            [
+              214,
+              319
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.6676,
+            "correct": 231,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.6838,
+            "correct": 333,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.7444,
+            "correct": 431,
+            "total": 579
+          }
+        }
+      },
+      "cpu_kv_cache_benchmark": {
+        "generated_tokens": 96,
+        "exact_token_match": true,
+        "kv_cached_seconds": 0.1146,
+        "kv_cached_tok_per_s": 837.45,
+        "uncached_seconds": 0.5689,
+        "uncached_tok_per_s": 168.74,
+        "speedup_ratio": 4.96
+      }
+    },
+    "515m": {
+      "parameters": 514859520,
+      "vocab_size": 32768,
+      "config": {
+        "vocab_size": 32768,
+        "context": 512,
+        "width": 1280,
+        "heads": 20,
+        "layers": 24,
+        "dropout": 0.1
+      },
+      "selected_pretrain_step": 5000,
+      "wikitext_test": {
+        "ctx_128": {
+          "window": 128,
+          "total_utf8_bytes": 1287656,
+          "total_words": 241211,
+          "total_tokens": 272249,
+          "evaluated_tokens": 272128,
+          "coverage": 0.999559,
+          "token_loss": 3.6261,
+          "token_perplexity": 37.57,
+          "bits_per_byte": 1.1061,
+          "word_perplexity": 59.9
+        },
+        "ctx_512": {
+          "window": 512,
+          "total_utf8_bytes": 1287656,
+          "total_words": 241211,
+          "total_tokens": 272249,
+          "evaluated_tokens": 271872,
+          "coverage": 0.998619,
+          "token_loss": 3.42,
+          "token_perplexity": 30.57,
+          "bits_per_byte": 1.0432,
+          "word_perplexity": 47.47
+        }
+      },
+      "blimp_zero_shot": {
+        "macro_accuracy": 0.842,
+        "total_correct": 4210,
+        "total_pairs": 5000,
+        "tasks": {
+          "regular_plural_subject_verb_agreement_1": {
+            "name": "主谓单复数一致",
+            "accuracy": 0.888,
+            "correct": 888,
+            "total": 1000
+          },
+          "determiner_noun_agreement_1": {
+            "name": "限定词名词一致",
+            "accuracy": 0.949,
+            "correct": 949,
+            "total": 1000
+          },
+          "anaphor_number_agreement": {
+            "name": "反身代词指代",
+            "accuracy": 0.927,
+            "correct": 927,
+            "total": 1000
+          },
+          "irregular_past_participle_verbs": {
+            "name": "不规则过去分词",
+            "accuracy": 0.814,
+            "correct": 814,
+            "total": 1000
+          },
+          "wh_questions_object_gap": {
+            "name": "疑问句宾语空位",
+            "accuracy": 0.632,
+            "correct": 632,
+            "total": 1000
+          }
+        }
+      },
+      "sentiment_icl": {
+        "zero_shot": {
+          "accuracy": 0.5882,
+          "roc_auc": 0.648,
+          "correct": 627,
+          "total": 1066
+        },
+        "four_shot": {
+          "accuracy": 0.5947,
+          "roc_auc": 0.683,
+          "correct": 634,
+          "total": 1066
+        }
+      },
+      "sentiment_supervised": {
+        "frozen": {
+          "selected_epoch": 9,
+          "accuracy": 0.7477,
+          "macro_f1": 0.7469,
+          "roc_auc": 0.8259,
+          "loss": 0.5147,
+          "confusion_matrix": [
+            [
+              428,
+              105
+            ],
+            [
+              164,
+              369
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.6792,
+            "correct": 235,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7515,
+            "correct": 366,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.7444,
+            "correct": 431,
+            "total": 579
+          }
+        },
+        "scratch": {
+          "selected_epoch": 2,
+          "accuracy": 0.7186,
+          "macro_f1": 0.7085,
+          "roc_auc": 0.8445,
+          "loss": 0.5512,
+          "confusion_matrix": [
+            [
+              482,
+              51
+            ],
+            [
+              249,
+              284
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.6387,
+            "correct": 221,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7125,
+            "correct": 347,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.7237,
+            "correct": 419,
+            "total": 579
+          }
+        },
+        "full": {
+          "selected_epoch": 2,
+          "accuracy": 0.7974,
+          "macro_f1": 0.7947,
+          "roc_auc": 0.8975,
+          "loss": 0.4472,
+          "confusion_matrix": [
+            [
+              486,
+              47
+            ],
+            [
+              169,
+              364
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.7572,
+            "correct": 262,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7782,
+            "correct": 379,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.8135,
+            "correct": 471,
+            "total": 579
+          }
+        }
+      },
+      "cpu_kv_cache_benchmark": {
+        "generated_tokens": 96,
+        "exact_token_match": true,
+        "kv_cached_seconds": 3.1924,
+        "kv_cached_tok_per_s": 30.07,
+        "uncached_seconds": 14.6426,
+        "uncached_tok_per_s": 6.56,
+        "speedup_ratio": 4.59
+      }
+    }
+  }
+}

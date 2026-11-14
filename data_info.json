@@ -1,25 +1,42 @@
 {
   "sources": {
-    "wiki": "https://huggingface.co/datasets/Salesforce/wikitext",
-    "sentiment": "https://huggingface.co/datasets/cornell-movie-review-data/rotten_tomatoes"
+    "wikitext_103": "https://huggingface.co/datasets/Salesforce/wikitext (wikitext-103-raw-v1)",
+    "imdb_unsupervised": "https://huggingface.co/datasets/stanfordnlp/imdb (unsupervised split)",
+    "rotten_tomatoes": "https://huggingface.co/datasets/cornell-movie-review-data/rotten_tomatoes"
   },
+  "vocab_size": 32768,
   "wiki": {
     "train": {
-      "rows": 36718,
-      "characters": 10892990,
-      "tokens": 3083246
+      "rows": 1801350,
+      "non_empty_lines": 1165029,
+      "characters": 538294333,
+      "utf8_bytes": 539295549,
+      "wiki_tokens": 114041190,
+      "imdb_unsupervised_tokens": 14952173,
+      "tokens": 128993363,
+      "articles": 29867
     },
     "validation": {
       "rows": 3760,
+      "non_empty_lines": 2461,
       "characters": 1142150,
-      "tokens": 322745
+      "utf8_bytes": 1144248,
+      "tokens": 238948
     },
     "test": {
       "rows": 4358,
+      "non_empty_lines": 2891,
       "characters": 1285622,
-      "tokens": 367992
+      "utf8_bytes": 1287656,
+      "tokens": 272249
     }
   },
+  "imdb_unsupervised": {
+    "documents": 50000,
+    "characters": 65366670,
+    "tokens": 14952173
+  },
+  "pretrain_total_tokens": 128993363,
   "sentiment": {
     "train": {
       "examples": 8530,
@@ -37,29 +54,42 @@
       "positive": 533
     }
   },
-  "vocab_size": 4096,
   "tokenization_example": {
-    "text": "Language models learn from text.",
+    "text": "Language models learn general representations from large-scale text corpora.",
     "tokens": [
       "L",
       "angu",
       "age",
-      "Ġmod",
-      "els",
+      "Ġmodels",
       "Ġlearn",
+      "Ġgeneral",
+      "Ġrepresentations",
       "Ġfrom",
+      "Ġlarge",
+      "-",
+      "sc",
+      "ale",
       "Ġtext",
+      "Ġcorpor",
+      "a",
       "."
     ],
     "ids": [
       46,
-      2263,
-      556,
-      1191,
-      1044,
-      2692,
+      2477,
+      564,
+      6250,
+      4562,
+      2274,
+      24133,
       405,
-      4038,
+      1428,
+      15,
+      2546,
+      924,
+      4140,
+      8499,
+      67,
       16
     ]
   }

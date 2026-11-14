@@ -3,8 +3,9 @@ __pycache__/
 data/
 checkpoints/
 *.log
-# 个人信息报告与本地绘图字体不发布到公开仓库。
+# 含个人信息的实验报告与本地中文字体保留在本地目录。
 main.typ
 main.pdf
+GUIDE.typ
+GUIDE.pdf
 assets/Times_New_Roman+SimSun.ttf
-
