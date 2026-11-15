@@ -362,6 +362,922 @@
             "total": 579
           }
         }
+      },
+      "pretrain_summary": {
+        "settings": {
+          "seed": 2026,
+          "max_steps": 5000,
+          "micro_batch_size": 8,
+          "grad_accum_steps": 8,
+          "effective_batch_size": 64,
+          "tokens_per_step": 32768,
+          "context": 512,
+          "peak_lr": 0.0003,
+          "minimum_lr": 3e-05,
+          "warmup_steps": 200,
+          "lr_decay_steps": 5000,
+          "validation_interval": 250,
+          "patience": 4,
+          "weight_decay": 0.1,
+          "grad_clip": 1.0,
+          "optimizer": "AdamW",
+          "precision": "bfloat16",
+          "checkpoint_dtype": "bfloat16",
+          "compiled": true
+        },
+        "initial_validation": {
+          "loss": 10.630811797702773,
+          "perplexity": 41390.71245054585,
+          "evaluated_tokens": 238592,
+          "omitted_tail_tokens": 355,
+          "bits_per_byte": 3.202758603211517
+        },
+        "history": [
+          {
+            "step": 250,
+            "sampled_tokens": 8192000,
+            "train_loss": 6.8437880313396455,
+            "validation_loss": 5.941787216284756,
+            "validation_perplexity": 380.6145625760729,
+            "validation_bpb": 1.7900900220546143,
+            "learning_rate": 0.00029992771930930934,
+            "grad_norm": 0.59720778465271,
+            "elapsed_seconds": 734.54,
+            "bad_checks": 0
+          },
+          {
+            "step": 500,
+            "sampled_tokens": 16384000,
+            "train_loss": 5.704355460882187,
+            "validation_loss": 5.290631924576002,
+            "validation_perplexity": 198.46880310483704,
+            "validation_bpb": 1.5939156139066333,
+            "learning_rate": 0.0002974060128544361,
+            "grad_norm": 0.5215246677398682,
+            "elapsed_seconds": 1493.95,
+            "bad_checks": 0
+          },
+          {
+            "step": 750,
+            "sampled_tokens": 24576000,
+            "train_loss": 5.148422265768051,
+            "validation_loss": 4.8294327126040475,
+            "validation_perplexity": 125.13995019852341,
+            "validation_bpb": 1.4549695228605348,
+            "learning_rate": 0.00029134730011223895,
+            "grad_norm": 0.5422090888023376,
+            "elapsed_seconds": 2256.34,
+            "bad_checks": 0
+          },
+          {
+            "step": 1000,
+            "sampled_tokens": 32768000,
+            "train_loss": 4.801716432332992,
+            "validation_loss": 4.533718538898255,
+            "validation_perplexity": 93.10412950625893,
+            "validation_bpb": 1.3658793261803082,
+            "learning_rate": 0.00028191342951089924,
+            "grad_norm": 0.5005829930305481,
+            "elapsed_seconds": 3019.9,
+            "bad_checks": 0
+          },
+          {
+            "step": 1250,
+            "sampled_tokens": 40960000,
+            "train_loss": 4.529461660146714,
+            "validation_loss": 4.272587358695755,
+            "validation_perplexity": 71.70692734978992,
+            "validation_bpb": 1.2872079932778613,
+            "learning_rate": 0.0002693564112039694,
+            "grad_norm": 0.5246031284332275,
+            "elapsed_seconds": 3783.93,
+            "bad_checks": 0
+          },
+          {
+            "step": 1500,
+            "sampled_tokens": 49152000,
+            "train_loss": 4.309069986701012,
+            "validation_loss": 4.091436652154882,
+            "validation_perplexity": 59.825778828483145,
+            "validation_bpb": 1.2326324824991832,
+            "learning_rate": 0.00025401168503850927,
+            "grad_norm": 0.47173765301704407,
+            "elapsed_seconds": 4548.26,
+            "bad_checks": 0
+          },
+          {
+            "step": 1750,
+            "sampled_tokens": 57344000,
+            "train_loss": 4.162180927157402,
+            "validation_loss": 3.973247701006386,
+            "validation_perplexity": 53.15688848536069,
+            "validation_bpb": 1.1970255422862837,
+            "learning_rate": 0.00023628915983779964,
+            "grad_norm": 0.4995681643486023,
+            "elapsed_seconds": 5316.76,
+            "bad_checks": 0
+          },
+          {
+            "step": 2000,
+            "sampled_tokens": 65536000,
+            "train_loss": 4.0473539469242095,
+            "validation_loss": 3.8753006243398773,
+            "validation_perplexity": 48.19718536043981,
+            "validation_bpb": 1.1675168981279074,
+            "learning_rate": 0.00021666226336928708,
+            "grad_norm": 0.4899365305900574,
+            "elapsed_seconds": 6084.15,
+            "bad_checks": 0
+          },
+          {
+            "step": 2250,
+            "sampled_tokens": 73728000,
+            "train_loss": 3.961468674659729,
+            "validation_loss": 3.798101747496445,
+            "validation_perplexity": 44.616410844276146,
+            "validation_bpb": 1.144259091323163,
+            "learning_rate": 0.00019565529550964034,
+            "grad_norm": 0.49135613441467285,
+            "elapsed_seconds": 6851.19,
+            "bad_checks": 0
+          },
+          {
+            "step": 2500,
+            "sampled_tokens": 81920000,
+            "train_loss": 3.8699909666776655,
+            "validation_loss": 3.7200715971606995,
+            "validation_perplexity": 41.267348627833286,
+            "validation_bpb": 1.1207508456639086,
+            "learning_rate": 0.0001738294224460693,
+            "grad_norm": 0.4978168308734894,
+            "elapsed_seconds": 7618.05,
+            "bad_checks": 0
+          },
+          {
+            "step": 2750,
+            "sampled_tokens": 90112000,
+            "train_loss": 3.800970594882965,
+            "validation_loss": 3.6624307959888114,
+            "validation_perplexity": 38.955921772139874,
+            "validation_bpb": 1.1033853259498672,
+            "learning_rate": 0.0001517676860555093,
+            "grad_norm": 0.4825802445411682,
+            "elapsed_seconds": 8384.67,
+            "bad_checks": 0
+          },
+          {
+            "step": 3000,
+            "sampled_tokens": 98304000,
+            "train_loss": 3.74464170897007,
+            "validation_loss": 3.609050316872003,
+            "validation_perplexity": 36.930963442685226,
+            "validation_bpb": 1.0873033190450085,
+            "learning_rate": 0.00013005942891115968,
+            "grad_norm": 0.49435436725616455,
+            "elapsed_seconds": 9152.09,
+            "bad_checks": 0
+          },
+          {
+            "step": 3250,
+            "sampled_tokens": 106496000,
+            "train_loss": 3.678698295235634,
+            "validation_loss": 3.5650994767446886,
+            "validation_perplexity": 35.34296903292217,
+            "validation_bpb": 1.0740621918371551,
+            "learning_rate": 0.0001092845509764067,
+            "grad_norm": 0.47064489126205444,
+            "elapsed_seconds": 9919.5,
+            "bad_checks": 0
+          },
+          {
+            "step": 3500,
+            "sampled_tokens": 114688000,
+            "train_loss": 3.6355193061828612,
+            "validation_loss": 3.5226116548791975,
+            "validation_perplexity": 33.87277704907801,
+            "validation_bpb": 1.0612618300584973,
+            "learning_rate": 8.999801854235373e-05,
+            "grad_norm": 0.48609718680381775,
+            "elapsed_seconds": 10687.74,
+            "bad_checks": 0
+          },
+          {
+            "step": 3750,
+            "sampled_tokens": 122880000,
+            "train_loss": 3.6010994737148283,
+            "validation_loss": 3.4867885573227517,
+            "validation_perplexity": 32.68082640042412,
+            "validation_bpb": 1.0504693585073235,
+            "learning_rate": 7.271503922691237e-05,
+            "grad_norm": 0.49597591161727905,
+            "elapsed_seconds": 11455.92,
+            "bad_checks": 0
+          },
+          {
+            "step": 4000,
+            "sampled_tokens": 131072000,
+            "train_loss": 3.5572198317050936,
+            "validation_loss": 3.4580253449632377,
+            "validation_perplexity": 31.754210952300333,
+            "validation_bpb": 1.041803827822231,
+            "learning_rate": 5.789729906068326e-05,
+            "grad_norm": 0.5043930411338806,
+            "elapsed_seconds": 12224.32,
+            "bad_checks": 0
+          },
+          {
+            "step": 4250,
+            "sampled_tokens": 139264000,
+            "train_loss": 3.533671935796738,
+            "validation_loss": 3.436658269857644,
+            "validation_perplexity": 31.08291371122264,
+            "validation_bpb": 1.0353665411011272,
+            "learning_rate": 4.594062931297208e-05,
+            "grad_norm": 0.5071001052856445,
+            "elapsed_seconds": 12991.53,
+            "bad_checks": 0
+          },
+          {
+            "step": 4500,
+            "sampled_tokens": 147456000,
+            "train_loss": 3.51328481733799,
+            "validation_loss": 3.4204295182944366,
+            "validation_perplexity": 30.58254796426976,
+            "validation_bpb": 1.0304772838480099,
+            "learning_rate": 3.7164432518160744e-05,
+            "grad_norm": 0.5051454305648804,
+            "elapsed_seconds": 13758.7,
+            "bad_checks": 0
+          },
+          {
+            "step": 4750,
+            "sampled_tokens": 155648000,
+            "train_loss": 3.4911231693029405,
+            "validation_loss": 3.4071471343224653,
+            "validation_perplexity": 30.17902462782139,
+            "validation_bpb": 1.026475682620662,
+            "learning_rate": 3.180315016854134e-05,
+            "grad_norm": 0.5137376189231873,
+            "elapsed_seconds": 14527.11,
+            "bad_checks": 0
+          },
+          {
+            "step": 5000,
+            "sampled_tokens": 163840000,
+            "train_loss": 3.467963064670563,
+            "validation_loss": 3.395805682235521,
+            "validation_perplexity": 29.8386842909019,
+            "validation_bpb": 1.023058828486134,
+            "learning_rate": 3e-05,
+            "grad_norm": 0.5202580094337463,
+            "elapsed_seconds": 15295.44,
+            "bad_checks": 0
+          }
+        ],
+        "training_seconds": 15295.44,
+        "peak_gpu_memory_gb": 20.07,
+        "generation": [
+          {
+            "prompt": "The history of",
+            "text": "The history of the story is so much of the background that it's obvious that a movie like this will be an early attempt to give a whole new story, but the movie is far too short of the original. It's difficult to get a copy of the book and I'm sure to see that one will find a copy of it. \nThis is one of the better films I have seen. I can"
+          },
+          {
+            "prompt": "In the early twentieth century,",
+            "text": "In the early twentieth century, the film is about a young woman who's lost in love for the first time. He has to overcome all the issues she has, in her own way, that her new friend must do. She struggles in love, and doesn't want to do anything to stop her from seeing the film.\nThe film is set in the mid-50's, where the viewer must see all of the other"
+          },
+          {
+            "prompt": "The film delivers a",
+            "text": "The film delivers a very low budget, and this is a very cheap and cheap attempt. There are some very clever bits and some really fun, but I think the film was going to be much more in the context of the genre. The plot, though, is a little over a place, and there are very few very good looking plot holes. I think the makers of both films, who obviously never looked very hard"
+          },
+          {
+            "prompt": "Artificial intelligence and",
+            "text": "Artificial intelligence and intelligence \" , the French had lost at least one man killed and six wounded . \n = = = French and French occupation = = = \n Although the French had no known enemy to have been involved during the French Revolution , their intelligence skills and proficiency had been limited . The French sought to force their soldiers to remain in French hands , as they had no means of retaking the French from the French"
+          }
+        ]
+      },
+      "finetune_history": {
+        "frozen": [
+          {
+            "epoch": 1,
+            "train_loss": 0.6641020369417922,
+            "bad_checks": 0,
+            "elapsed_seconds": 27.04,
+            "accuracy": 0.650093808630394,
+            "macro_f1": 0.6331649621972202,
+            "confusion_matrix": [
+              [
+                232,
+                301
+              ],
+              [
+                72,
+                461
+              ]
+            ],
+            "correct": 693,
+            "examples": 1066,
+            "loss": 0.6076202625181617
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.6017866315693536,
+            "bad_checks": 0,
+            "elapsed_seconds": 54.7,
+            "accuracy": 0.7082551594746717,
+            "macro_f1": 0.7032089415282422,
+            "confusion_matrix": [
+              [
+                447,
+                86
+              ],
+              [
+                225,
+                308
+              ]
+            ],
+            "correct": 755,
+            "examples": 1066,
+            "loss": 0.5597838836584037
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.571422073772616,
+            "bad_checks": 0,
+            "elapsed_seconds": 82.55,
+            "accuracy": 0.7270168855534709,
+            "macro_f1": 0.7259342307885998,
+            "confusion_matrix": [
+              [
+                354,
+                179
+              ],
+              [
+                112,
+                421
+              ]
+            ],
+            "correct": 775,
+            "examples": 1066,
+            "loss": 0.5313338446125081
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.5541213593337628,
+            "bad_checks": 0,
+            "elapsed_seconds": 110.49,
+            "accuracy": 0.7476547842401501,
+            "macro_f1": 0.7472435163467479,
+            "confusion_matrix": [
+              [
+                420,
+                113
+              ],
+              [
+                156,
+                377
+              ]
+            ],
+            "correct": 797,
+            "examples": 1066,
+            "loss": 0.5193878606828471
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.5401773528854286,
+            "bad_checks": 0,
+            "elapsed_seconds": 138.53,
+            "accuracy": 0.7514071294559099,
+            "macro_f1": 0.7513438908092569,
+            "confusion_matrix": [
+              [
+                409,
+                124
+              ],
+              [
+                141,
+                392
+              ]
+            ],
+            "correct": 801,
+            "examples": 1066,
+            "loss": 0.5161718525984945
+          },
+          {
+            "epoch": 6,
+            "train_loss": 0.5328694944784202,
+            "bad_checks": 1,
+            "elapsed_seconds": 164.98,
+            "accuracy": 0.7363977485928705,
+            "macro_f1": 0.7356419120171351,
+            "confusion_matrix": [
+              [
+                364,
+                169
+              ],
+              [
+                112,
+                421
+              ]
+            ],
+            "correct": 785,
+            "examples": 1066,
+            "loss": 0.5190224227046429
+          },
+          {
+            "epoch": 7,
+            "train_loss": 0.5217599646217798,
+            "bad_checks": 2,
+            "elapsed_seconds": 191.72,
+            "accuracy": 0.7401500938086304,
+            "macro_f1": 0.7379805793883829,
+            "confusion_matrix": [
+              [
+                443,
+                90
+              ],
+              [
+                187,
+                346
+              ]
+            ],
+            "correct": 789,
+            "examples": 1066,
+            "loss": 0.5200281626288037
+          },
+          {
+            "epoch": 8,
+            "train_loss": 0.5198390352488402,
+            "bad_checks": 0,
+            "elapsed_seconds": 220.37,
+            "accuracy": 0.7439024390243902,
+            "macro_f1": 0.7421047734251419,
+            "confusion_matrix": [
+              [
+                441,
+                92
+              ],
+              [
+                181,
+                352
+              ]
+            ],
+            "correct": 793,
+            "examples": 1066,
+            "loss": 0.5159444200612368
+          },
+          {
+            "epoch": 9,
+            "train_loss": 0.5133456613086732,
+            "bad_checks": 0,
+            "elapsed_seconds": 248.65,
+            "accuracy": 0.7439024390243902,
+            "macro_f1": 0.7434036328624067,
+            "confusion_matrix": [
+              [
+                420,
+                113
+              ],
+              [
+                160,
+                373
+              ]
+            ],
+            "correct": 793,
+            "examples": 1066,
+            "loss": 0.5129230098473869
+          },
+          {
+            "epoch": 10,
+            "train_loss": 0.511680394529877,
+            "bad_checks": 1,
+            "elapsed_seconds": 275.17,
+            "accuracy": 0.7392120075046904,
+            "macro_f1": 0.7365074171417597,
+            "confusion_matrix": [
+              [
+                448,
+                85
+              ],
+              [
+                193,
+                340
+              ]
+            ],
+            "correct": 788,
+            "examples": 1066,
+            "loss": 0.5186754480759154
+          }
+        ],
+        "scratch": [
+          {
+            "epoch": 1,
+            "train_loss": 0.8496442164793383,
+            "bad_checks": 0,
+            "elapsed_seconds": 75.75,
+            "accuracy": 0.5,
+            "macro_f1": 0.3333333333333333,
+            "confusion_matrix": [
+              [
+                533,
+                0
+              ],
+              [
+                533,
+                0
+              ]
+            ],
+            "correct": 533,
+            "examples": 1066,
+            "loss": 0.7041598994557451
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.6151787402132332,
+            "bad_checks": 0,
+            "elapsed_seconds": 152.62,
+            "accuracy": 0.7054409005628518,
+            "macro_f1": 0.6963954648526077,
+            "confusion_matrix": [
+              [
+                468,
+                65
+              ],
+              [
+                249,
+                284
+              ]
+            ],
+            "correct": 752,
+            "examples": 1066,
+            "loss": 0.5932405733033371
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.35419530166970326,
+            "bad_checks": 1,
+            "elapsed_seconds": 228.3,
+            "accuracy": 0.7514071294559099,
+            "macro_f1": 0.7510739446703706,
+            "confusion_matrix": [
+              [
+                381,
+                152
+              ],
+              [
+                113,
+                420
+              ]
+            ],
+            "correct": 801,
+            "examples": 1066,
+            "loss": 0.6235924250189404
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.17209843895359866,
+            "bad_checks": 2,
+            "elapsed_seconds": 304.68,
+            "accuracy": 0.7382739212007504,
+            "macro_f1": 0.7364367464674527,
+            "confusion_matrix": [
+              [
+                438,
+                95
+              ],
+              [
+                184,
+                349
+              ]
+            ],
+            "correct": 787,
+            "examples": 1066,
+            "loss": 0.7822726340946964
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.07515449840640966,
+            "bad_checks": 3,
+            "elapsed_seconds": 380.96,
+            "accuracy": 0.7307692307692307,
+            "macro_f1": 0.7305413534496805,
+            "confusion_matrix": [
+              [
+                405,
+                128
+              ],
+              [
+                159,
+                374
+              ]
+            ],
+            "correct": 779,
+            "examples": 1066,
+            "loss": 1.1214812101611054
+          }
+        ],
+        "full": [
+          {
+            "epoch": 1,
+            "train_loss": 0.5832710042718148,
+            "bad_checks": 0,
+            "elapsed_seconds": 75.01,
+            "accuracy": 0.7129455909943715,
+            "macro_f1": 0.6944906491638194,
+            "confusion_matrix": [
+              [
+                511,
+                22
+              ],
+              [
+                284,
+                249
+              ]
+            ],
+            "correct": 760,
+            "examples": 1066,
+            "loss": 0.5743815429215136
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.39527621034790456,
+            "bad_checks": 0,
+            "elapsed_seconds": 151.86,
+            "accuracy": 0.7898686679174484,
+            "macro_f1": 0.7866963953920476,
+            "confusion_matrix": [
+              [
+                486,
+                47
+              ],
+              [
+                177,
+                356
+              ]
+            ],
+            "correct": 842,
+            "examples": 1066,
+            "loss": 0.4705787876980837
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.22227596616828846,
+            "bad_checks": 1,
+            "elapsed_seconds": 227.56,
+            "accuracy": 0.7833020637898687,
+            "macro_f1": 0.7819803500235067,
+            "confusion_matrix": [
+              [
+                376,
+                157
+              ],
+              [
+                74,
+                459
+              ]
+            ],
+            "correct": 835,
+            "examples": 1066,
+            "loss": 0.6551889729097234
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.1038267602176697,
+            "bad_checks": 2,
+            "elapsed_seconds": 303.8,
+            "accuracy": 0.797373358348968,
+            "macro_f1": 0.7973669388904534,
+            "confusion_matrix": [
+              [
+                422,
+                111
+              ],
+              [
+                105,
+                428
+              ]
+            ],
+            "correct": 850,
+            "examples": 1066,
+            "loss": 0.7463151742101387
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.05318274144285248,
+            "bad_checks": 3,
+            "elapsed_seconds": 380.21,
+            "accuracy": 0.7776735459662288,
+            "macro_f1": 0.7774053799735151,
+            "confusion_matrix": [
+              [
+                396,
+                137
+              ],
+              [
+                100,
+                433
+              ]
+            ],
+            "correct": 829,
+            "examples": 1066,
+            "loss": 1.1681088202442507
+          }
+        ]
+      }
+    },
+    "qwen3": {
+      "parameters": 516227072,
+      "vocab_size": 32768,
+      "config": {
+        "arch": "qwen3",
+        "vocab_size": 32768,
+        "context": 512,
+        "width": 1024,
+        "heads": 16,
+        "kv_heads": 8,
+        "head_dim": 128,
+        "ffn_width": 2880,
+        "layers": 28,
+        "dropout": 0.0,
+        "rope_theta": 10000.0,
+        "rms_eps": 1e-06,
+        "qk_norm": true,
+        "attn_gate": true
+      },
+      "selected_pretrain_step": 5000,
+      "wikitext_test": {
+        "ctx_128": {
+          "window": 128,
+          "total_utf8_bytes": 1287656,
+          "total_words": 241211,
+          "total_tokens": 272249,
+          "evaluated_tokens": 272128,
+          "coverage": 0.999559,
+          "token_loss": 3.3797,
+          "token_perplexity": 29.36,
+          "bits_per_byte": 1.0309,
+          "word_perplexity": 45.36
+        },
+        "ctx_512": {
+          "window": 512,
+          "total_utf8_bytes": 1287656,
+          "total_words": 241211,
+          "total_tokens": 272249,
+          "evaluated_tokens": 271872,
+          "coverage": 0.998619,
+          "token_loss": 3.1711,
+          "token_perplexity": 23.83,
+          "bits_per_byte": 0.9673,
+          "word_perplexity": 35.84
+        }
+      },
+      "blimp_zero_shot": {
+        "macro_accuracy": 0.863,
+        "total_correct": 4315,
+        "total_pairs": 5000,
+        "tasks": {
+          "regular_plural_subject_verb_agreement_1": {
+            "name": "主谓单复数一致",
+            "accuracy": 0.888,
+            "correct": 888,
+            "total": 1000
+          },
+          "determiner_noun_agreement_1": {
+            "name": "限定词名词一致",
+            "accuracy": 0.955,
+            "correct": 955,
+            "total": 1000
+          },
+          "anaphor_number_agreement": {
+            "name": "反身代词指代",
+            "accuracy": 0.952,
+            "correct": 952,
+            "total": 1000
+          },
+          "irregular_past_participle_verbs": {
+            "name": "不规则过去分词",
+            "accuracy": 0.767,
+            "correct": 767,
+            "total": 1000
+          },
+          "wh_questions_object_gap": {
+            "name": "疑问句宾语空位",
+            "accuracy": 0.753,
+            "correct": 753,
+            "total": 1000
+          }
+        }
+      },
+      "sentiment_icl": {
+        "zero_shot": {
+          "accuracy": 0.727,
+          "roc_auc": 0.7958,
+          "correct": 775,
+          "total": 1066
+        },
+        "four_shot": {
+          "accuracy": 0.5563,
+          "roc_auc": 0.6598,
+          "correct": 593,
+          "total": 1066
+        }
+      },
+      "sentiment_supervised": {
+        "frozen": {
+          "selected_epoch": 9,
+          "accuracy": 0.7992,
+          "macro_f1": 0.7992,
+          "roc_auc": 0.8703,
+          "loss": 0.4514,
+          "confusion_matrix": [
+            [
+              426,
+              107
+            ],
+            [
+              107,
+              426
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.7746,
+            "correct": 268,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7885,
+            "correct": 384,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.8083,
+            "correct": 468,
+            "total": 579
+          }
+        },
+        "scratch": {
+          "selected_epoch": 2,
+          "accuracy": 0.7542,
+          "macro_f1": 0.7542,
+          "roc_auc": 0.8336,
+          "loss": 0.5112,
+          "confusion_matrix": [
+            [
+              408,
+              125
+            ],
+            [
+              137,
+              396
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.7168,
+            "correct": 248,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7392,
+            "correct": 360,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.7668,
+            "correct": 444,
+            "total": 579
+          }
+        },
+        "full": {
+          "selected_epoch": 2,
+          "accuracy": 0.8208,
+          "macro_f1": 0.8205,
+          "roc_auc": 0.9021,
+          "loss": 0.396,
+          "confusion_matrix": [
+            [
+              460,
+              73
+            ],
+            [
+              118,
+              415
+            ]
+          ],
+          "hard_negation_contrast": {
+            "accuracy": 0.7832,
+            "correct": 271,
+            "total": 346
+          },
+          "long_reviews": {
+            "accuracy": 0.7967,
+            "correct": 388,
+            "total": 487
+          },
+          "short_reviews": {
+            "accuracy": 0.8411,
+            "correct": 487,
+            "total": 579
+          }
+        }
       }
     }
   },
@@ -371,43 +1287,52 @@
         "prompt": "The film was",
         "random_init_515m": "The film was strateg Titich catap public7 glor excelled Scar glor reck Belizeatical energiesandra glorinement Libya recru likeness Libya Clif publish publish showcaseandra exaggeratedructive envoys Jewsonialonial",
         "pretrained_4m": "The film was filmed in the 2010 film Fatal Films . The film was directed by Birka Badi , who was filmed in the Bolly Film Festival . A filming of Kumai had been released in Japan . In 2004 , the film became the cadets ' last film director , and the film",
-        "pretrained_515m": "The film was very good; I don't know why they filmed this with it. You'll be surprised by the music. One of the best \"control\" movies I have ever watched. It's not a great movie, it's just a drama, it's just a drama. I think it"
+        "pretrained_515m": "The film was very good; I don't know why they filmed this with it. You'll be surprised by the music. One of the best \"control\" movies I have ever watched. It's not a great movie, it's just a drama, it's just a drama. I think it",
+        "pretrained_qwen3": "The film was based on the book by Jonathan Demme . It features the first episode of Scooby @-@ Doo and was based on the book . The book is titled Scooby @-@ Doo . \n = = Themes and analysis = = \n = = = Artistic style = = = \n The artwork for Sc"
       },
       {
         "prompt": "In the early years",
         "pretrained_4m": "In the early years of the United States , he was founded by the British Columbia Association of America ( IMA ) . He was the first time to win the Dota 2 border in England , and his son of Saundon . FCA Cup semi @-@ finals , including two teammate Tests , Do",
-        "pretrained_515m": "In the early years of the 19th century , the German authorities had begun to establish a law court in the area , and the German courts were also created . The courts were eventually allowed to become law courts and courts . A few areas of the state of the Commonwealth were still part of the Commonwealth as part of the"
+        "pretrained_515m": "In the early years of the 19th century , the German authorities had begun to establish a law court in the area , and the German courts were also created . The courts were eventually allowed to become law courts and courts . A few areas of the state of the Commonwealth were still part of the Commonwealth as part of the",
+        "pretrained_qwen3": "In the early years of the Renaissance , French culture was largely dominated by the Protestant Reformation , with a small number of Protestant and Catholic pilgrims . Between 1550 and 1550 , a considerable proportion of the population came from Protestant England and Wales , and some Catholics came from England and Ireland . \n As a result of the Black"
       },
       {
         "prompt": "The history of",
         "pretrained_4m": "The history of the world . The \" Anonymous Movie Convention \" version of the album is recorded on Baby One ; \" It 's the same song is about the same time , and was released around 15 years . \" Maneater \" was included on the song on the album , while \" Briday \" End G",
-        "pretrained_515m": "The history of the game is presented by the game 's developer , Tatsi Nojima . In addition to the three versions of the game , the two versions of the game are also adapted as downloadable content for the game ."
+        "pretrained_515m": "The history of the game is presented by the game 's developer , Tatsi Nojima . In addition to the three versions of the game , the two versions of the game are also adapted as downloadable content for the game .",
+        "pretrained_qwen3": "The history of the film is so much of the time without explanation, you have to wonder.\nThose who have wondered why such a film hasn't been made have so long forgotten the true details of it's title and how its portrayal of a film can be done without giving it away. The film has been"
       }
     ],
     "sentiment_test_set_head_to_head": [
       {
-        "text": "not too fancy , not too filling , not too fluffy , but definitely tasty and sweet .",
+        "text": "an involving , inspirational drama that sometimes falls prey to its sob-story trappings .",
         "true_label": 1,
-        "full_4m_pos_prob": 0.115,
-        "full_515m_pos_prob": 0.893
+        "full_4m_pos_prob": 0.082,
+        "full_515m_pos_prob": 0.384,
+        "scratch_qwen3_pos_prob": 0.102,
+        "full_qwen3_pos_prob": 0.884
       },
       {
-        "text": "leaves viewers out in the cold and undermines some phenomenal performances .",
-        "true_label": 0,
-        "full_4m_pos_prob": 0.916,
-        "full_515m_pos_prob": 0.146
+        "text": "the film may not hit as hard as some of the better drug-related pictures , but it still manages to get a few punches in .",
+        "true_label": 1,
+        "full_4m_pos_prob": 0.465,
+        "full_515m_pos_prob": 0.372,
+        "scratch_qwen3_pos_prob": 0.099,
+        "full_qwen3_pos_prob": 0.879
       },
       {
         "text": "the hanukkah spirit seems fried in pork .",
         "true_label": 0,
         "full_4m_pos_prob": 0.833,
-        "full_515m_pos_prob": 0.033
+        "full_515m_pos_prob": 0.033,
+        "full_qwen3_pos_prob": 0.12
       },
       {
         "text": "an energetic and engaging film that never pretends to be something it isn't .",
         "true_label": 1,
         "full_4m_pos_prob": 0.186,
-        "full_515m_pos_prob": 0.962
+        "full_515m_pos_prob": 0.962,
+        "full_qwen3_pos_prob": 0.948
       }
     ]
   }

@@ -133,7 +133,7 @@ def run_classify(tokenizer: Tokenizer, text: str, device: str, variant: str):
 
 
 def run_demo(tokenizer: Tokenizer, device: str):
-    print(f'=== 作业三 515M GPT 演示 (运行设备: {device}) ===')
+    print(f'=== 作业三 516M Qwen3 模型演示 (运行设备: {device}) ===')
     prompts = [
         'The history of artificial intelligence began in',
         'The film delivers a remarkably compelling performance',
@@ -164,7 +164,7 @@ def run_demo(tokenizer: Tokenizer, device: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='515M GPT 文本续写与影评情感分类推理工具')
+    parser = argparse.ArgumentParser(description='516M Qwen3 文本续写与影评情感分类推理工具')
     parser.add_argument('task', choices=['generate', 'classify', 'demo', 'download'],
                         help='执行任务类型：generate(续写) / classify(分类) / demo(一键演示) / download(预下载权重)')
     parser.add_argument('text', nargs='?', default='', help='输入英文提示词或待分类影评文本')

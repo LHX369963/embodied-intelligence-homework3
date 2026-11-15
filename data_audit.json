@@ -1,8 +1,0 @@
-{
-  "sentiment_train_val_exact_overlap": 0,
-  "sentiment_train_test_exact_overlap": 0,
-  "sentiment_val_test_exact_overlap": 0,
-  "imdb_unsupervised_total": 50000,
-  "imdb_removed_holdout_overlap": 0,
-  "imdb_retained": 50000
-}

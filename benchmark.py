@@ -370,7 +370,7 @@ def run_scale(scale: str, ckpt_dir: Path, device: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--scale', choices=['4m', '515m'], required=True)
+    parser.add_argument('--scale', choices=['4m', '515m', 'qwen3'], required=True)
     parser.add_argument('--checkpoints', type=Path, default=ROOT / 'checkpoints')
     parser.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
     args = parser.parse_args()

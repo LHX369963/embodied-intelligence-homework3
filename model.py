@@ -1,4 +1,4 @@
-"""从随机初始化构建的 GPT 语言模型与情感分类模型；仅使用 PyTorch 基础算子。"""
+"""从随机初始化构建的 Qwen3 / GPT 语言模型与情感分类模型；仅使用 PyTorch 基础算子。"""
 from dataclasses import asdict, dataclass
 import math
 import torch
@@ -8,12 +8,126 @@ from torch.nn import functional as F
 
 @dataclass
 class Config:
+    arch: str = 'qwen3'
     vocab_size: int = 32768
     context: int = 512
-    width: int = 1280
-    heads: int = 20
-    layers: int = 24
-    dropout: float = 0.1
+    width: int = 1024
+    heads: int = 16
+    kv_heads: int = 8
+    head_dim: int = 128
+    ffn_width: int = 2880
+    layers: int = 28
+    dropout: float = 0.0
+    rope_theta: float = 10000.0
+    rms_eps: float = 1e-6
+    qk_norm: bool = True
+    attn_gate: bool = True
+
+
+class RMSNorm(nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-6):
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = x.float()
+        out = out * torch.rsqrt(out.pow(2).mean(dim=-1, keepdim=True) + self.eps)
+        return (out * self.weight.float()).to(x.dtype)
+
+
+def build_rope_cache(seq_len: int, head_dim: int, theta: float = 10000.0, device=None):
+    inv_freq = 1.0 / (theta ** (torch.arange(0, head_dim, 2, device=device, dtype=torch.float32) / head_dim))
+    positions = torch.arange(seq_len, device=device, dtype=torch.float32)
+    freqs = torch.outer(positions, inv_freq)
+    emb = torch.cat((freqs, freqs), dim=-1)
+    return emb.cos(), emb.sin()
+
+
+def rotate_half(x: torch.Tensor) -> torch.Tensor:
+    half = x.shape[-1] // 2
+    return torch.cat((-x[..., half:], x[..., :half]), dim=-1)
+
+
+def apply_rope(q: torch.Tensor, k: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor):
+    cos = cos.unsqueeze(0).unsqueeze(0)
+    sin = sin.unsqueeze(0).unsqueeze(0)
+    q_out = (q.float() * cos + rotate_half(q.float()) * sin).to(q.dtype)
+    k_out = (k.float() * cos + rotate_half(k.float()) * sin).to(k.dtype)
+    return q_out, k_out
+
+
+class QwenAttention(nn.Module):
+    """集成 2:1 GQA、逐头 QK-Norm、RoPE 与 Sigmoid 输出门控的因果自注意力。"""
+    def __init__(self, config: Config):
+        super().__init__()
+        if config.heads % config.kv_heads != 0:
+            raise ValueError('查询头数必须整除键值头数')
+        self.heads = config.heads
+        self.kv_heads = config.kv_heads
+        self.head_dim = config.head_dim
+        self.q_dim = config.heads * config.head_dim
+        self.kv_dim = config.kv_heads * config.head_dim
+        self.dropout = config.dropout
+        self.q_proj = nn.Linear(config.width, self.q_dim, bias=False)
+        self.k_proj = nn.Linear(config.width, self.kv_dim, bias=False)
+        self.v_proj = nn.Linear(config.width, self.kv_dim, bias=False)
+        self.gate_proj = nn.Linear(config.width, self.q_dim, bias=False) if config.attn_gate else None
+        self.q_norm = RMSNorm(self.head_dim, eps=config.rms_eps) if config.qk_norm else nn.Identity()
+        self.k_norm = RMSNorm(self.head_dim, eps=config.rms_eps) if config.qk_norm else nn.Identity()
+        self.o_proj = nn.Linear(self.q_dim, config.width, bias=False)
+
+    def forward(self, x, cos, sin, kv_cache=None, use_cache=False):
+        b, t, _ = x.shape
+        q = self.q_norm(self.q_proj(x).view(b, t, self.heads, self.head_dim)).transpose(1, 2)
+        k = self.k_norm(self.k_proj(x).view(b, t, self.kv_heads, self.head_dim)).transpose(1, 2)
+        v = self.v_proj(x).view(b, t, self.kv_heads, self.head_dim).transpose(1, 2)
+        q, k = apply_rope(q, k, cos, sin)
+        if kv_cache is not None:
+            k = torch.cat((kv_cache[0], k), dim=2)
+            v = torch.cat((kv_cache[1], v), dim=2)
+        causal = kv_cache is None and t > 1
+        y = F.scaled_dot_product_attention(
+            q, k, v,
+            is_causal=causal,
+            dropout_p=self.dropout if self.training else 0.0,
+            enable_gqa=(self.kv_heads != self.heads),
+        )
+        y = y.transpose(1, 2).contiguous().view(b, t, self.q_dim)
+        if self.gate_proj is not None:
+            y = y * torch.sigmoid(self.gate_proj(x))
+        out = self.o_proj(y)
+        return (out, (k, v)) if use_cache else out
+
+
+class SwiGLU(nn.Module):
+    def __init__(self, config: Config):
+        super().__init__()
+        self.gate_proj = nn.Linear(config.width, config.ffn_width, bias=False)
+        self.up_proj = nn.Linear(config.width, config.ffn_width, bias=False)
+        self.down_proj = nn.Linear(config.ffn_width, config.width, bias=False)
+
+    def forward(self, x):
+        return self.down_proj(F.silu(self.gate_proj(x)) * self.up_proj(x))
+
+
+class QwenBlock(nn.Module):
+    def __init__(self, config: Config):
+        super().__init__()
+        self.norm1 = RMSNorm(config.width, eps=config.rms_eps)
+        self.norm2 = RMSNorm(config.width, eps=config.rms_eps)
+        self.attn = QwenAttention(config)
+        self.ffn = SwiGLU(config)
+        self.drop = nn.Dropout(config.dropout)
+
+    def forward(self, x, cos, sin, kv_cache=None, use_cache=False):
+        if use_cache:
+            attn_out, next_cache = self.attn(self.norm1(x), cos, sin, kv_cache=kv_cache, use_cache=True)
+            x = x + self.drop(attn_out)
+            x = x + self.drop(self.ffn(self.norm2(x)))
+            return x, next_cache
+        x = x + self.drop(self.attn(self.norm1(x), cos, sin))
+        return x + self.drop(self.ffn(self.norm2(x)))
 
 
 class CausalAttention(nn.Module):
@@ -74,16 +188,23 @@ class GPT(nn.Module):
         super().__init__()
         self.config = config
         self.token = nn.Embedding(config.vocab_size, config.width)
-        self.position = nn.Embedding(config.context, config.width)
         self.drop = nn.Dropout(config.dropout)
-        self.blocks = nn.ModuleList([Block(config) for _ in range(config.layers)])
-        self.norm = nn.LayerNorm(config.width)
+        if config.arch == 'qwen3':
+            cos, sin = build_rope_cache(config.context, config.head_dim, config.rope_theta)
+            self.register_buffer('rope_cos', cos, persistent=False)
+            self.register_buffer('rope_sin', sin, persistent=False)
+            self.blocks = nn.ModuleList([QwenBlock(config) for _ in range(config.layers)])
+            self.norm = RMSNorm(config.width, eps=config.rms_eps)
+        else:
+            self.position = nn.Embedding(config.context, config.width)
+            self.blocks = nn.ModuleList([Block(config) for _ in range(config.layers)])
+            self.norm = nn.LayerNorm(config.width)
         self.lm_head = nn.Linear(config.width, config.vocab_size, bias=False)
         self.apply(self._init)
         self.lm_head.weight = self.token.weight
         scale = 0.02 / math.sqrt(2 * config.layers)
         for name, parameter in self.named_parameters():
-            if name.endswith('proj.weight') or name.endswith('ffn.2.weight'):
+            if name.endswith(('attn.proj.weight', 'ffn.2.weight', 'o_proj.weight', 'down_proj.weight')):
                 nn.init.normal_(parameter, std=scale)
 
     @staticmethod
@@ -95,9 +216,25 @@ class GPT(nn.Module):
 
     def encode(self, ids, kv_caches=None, use_cache=False):
         past_len = 0 if kv_caches is None else kv_caches[0][0].size(2)
-        if past_len + ids.shape[1] > self.config.context:
+        seq_len = ids.shape[1]
+        if past_len + seq_len > self.config.context:
             raise ValueError('输入序列超过模型最大上下文长度')
-        positions = torch.arange(past_len, past_len + ids.shape[1], device=ids.device)
+        if self.config.arch == 'qwen3':
+            x = self.drop(self.token(ids))
+            cos = self.rope_cos[past_len:past_len + seq_len]
+            sin = self.rope_sin[past_len:past_len + seq_len]
+            if not use_cache:
+                for block in self.blocks:
+                    x = block(x, cos, sin)
+                return self.norm(x)
+            next_caches = []
+            for i, block in enumerate(self.blocks):
+                layer_cache = None if kv_caches is None else kv_caches[i]
+                x, updated = block(x, cos, sin, kv_cache=layer_cache, use_cache=True)
+                next_caches.append(updated)
+            return self.norm(x), next_caches
+
+        positions = torch.arange(past_len, past_len + seq_len, device=ids.device)
         x = self.drop(self.token(ids) + self.position(positions))
         if not use_cache:
             for block in self.blocks:
@@ -154,8 +291,21 @@ class SentimentModel(nn.Module):
 
     def forward(self, ids, lengths):
         hidden = self.backbone.encode(ids)
-        pooled = hidden[torch.arange(len(ids), device=ids.device), lengths - 1]
+        if self.backbone.config.arch == 'qwen3':
+            pos = (lengths - 2).clamp(min=0)
+        else:
+            pos = lengths - 1
+        pooled = hidden[torch.arange(len(ids), device=ids.device), pos]
         return self.head(pooled)
+
+
+def _parse_config(raw_cfg: dict, dropout=None) -> Config:
+    cfg = dict(raw_cfg)
+    if 'arch' not in cfg:
+        cfg['arch'] = 'gpt2'
+    if dropout is not None:
+        cfg['dropout'] = dropout
+    return Config(**cfg)
 
 
 def _clean_state_dict(module: nn.Module, save_dtype=torch.bfloat16):
@@ -193,10 +343,10 @@ def save_gpt(model: GPT, path, save_dtype=torch.bfloat16, **metadata):
     torch.save(payload, path)
 
 
-def load_gpt(path, device='cpu', dtype=None):
+def load_gpt(path, device='cpu', dtype=None, dropout=None):
     saved = torch.load(path, map_location='cpu', weights_only=False)
     target_dtype = default_infer_dtype(device) if dtype is None else dtype
-    model = GPT(Config(**saved['config'])).to(dtype=target_dtype)
+    model = GPT(_parse_config(saved['config'], dropout=dropout)).to(dtype=target_dtype)
     state = {
         k.removeprefix('_orig_mod.'): (v.to(target_dtype) if v.is_floating_point() else v)
         for k, v in saved['model'].items()
@@ -220,7 +370,7 @@ def save_classifier(model: SentimentModel, path, save_dtype=torch.bfloat16, **me
 def load_classifier(path, device='cpu', dtype=None):
     saved = torch.load(path, map_location='cpu', weights_only=False)
     target_dtype = default_infer_dtype(device) if dtype is None else dtype
-    backbone = GPT(Config(**saved['config']))
+    backbone = GPT(_parse_config(saved['config']))
     model = SentimentModel(backbone).to(dtype=target_dtype)
     state = {
         k.removeprefix('_orig_mod.'): (v.to(target_dtype) if v.is_floating_point() else v)

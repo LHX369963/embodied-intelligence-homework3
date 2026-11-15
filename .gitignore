@@ -3,9 +3,14 @@ __pycache__/
 data/
 checkpoints/
 *.log
-# 含个人信息的实验报告与本地中文字体保留在本地目录。
+# 本地实验报告与排版模板文件保留在本地目录
 main.typ
 main.pdf
-GUIDE.typ
-GUIDE.pdf
+main.txt
+ref.bib
+template.typ
+pages/
+styles/
+utils/
+assets/header.png
 assets/Times_New_Roman+SimSun.ttf

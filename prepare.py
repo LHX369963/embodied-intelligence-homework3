@@ -127,16 +127,6 @@ def prepare():
         wiki_meta[split] = dict(rows=total_rows, non_empty_lines=len(non_empty),
                                 characters=chars, utf8_bytes=utf8_bytes)
 
-    audit = dict(
-        sentiment_train_val_exact_overlap=len(sentiment_norm['train'] & sentiment_norm['validation']),
-        sentiment_train_test_exact_overlap=len(sentiment_norm['train'] & sentiment_norm['test']),
-        sentiment_val_test_exact_overlap=len(sentiment_norm['validation'] & sentiment_norm['test']),
-        imdb_unsupervised_total=len(raw_imdb),
-        imdb_removed_holdout_overlap=removed_imdb_overlap,
-        imdb_retained=len(imdb_texts),
-    )
-    (ROOT / 'data_audit.json').write_text(json.dumps(audit, ensure_ascii=False, indent=2))
-
     print('训练字节级 BPE 分词器...', flush=True)
     tok = Tokenizer(models.BPE(unk_token='<unk>'))
     tok.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)

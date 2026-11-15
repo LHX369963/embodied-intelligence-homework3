@@ -1,8 +1,0 @@
-{
-  "python": "3.14.7",
-  "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
-  "torch": "2.13.0+rocm10.0.0",
-  "device": "cuda",
-  "gpu_name": "AMD Instinct MI100",
-  "gpu_total_memory_gb": 34.34
-}

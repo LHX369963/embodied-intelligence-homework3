@@ -1,18 +1,18 @@
-"""按顺序执行 515M GPT 预训练、三组监督微调对照与最终测试集评估。"""
+"""按顺序执行 516M Qwen3 架构预训练（WSD 调度）、三组监督微调对照（词表先验初始化 + LLRD + R-Drop）与最终测试集评估。"""
 import argparse
 from contextlib import nullcontext
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import gc
 import json
 import math
 from pathlib import Path
-import platform
 import random
 import time
 import numpy as np
 import pyarrow.parquet as pq
 import torch
 from torch import nn
+from torch.nn import functional as F
 from tokenizers import Tokenizer
 from model import (
     Config, GPT, SentimentModel,
@@ -74,20 +74,6 @@ def write_json(name, value):
     (ROOT / name).write_text(json.dumps(value, ensure_ascii=False, indent=2))
 
 
-def save_environment():
-    info = dict(
-        python=platform.python_version(),
-        platform=platform.platform(),
-        torch=torch.__version__,
-        device=str(DEVICE),
-        gpu_name=torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
-        gpu_total_memory_gb=round(torch.cuda.get_device_properties(0).total_memory / 1e9, 2)
-        if torch.cuda.is_available() else None,
-    )
-    write_json('environment.json', info)
-    return info
-
-
 def build_adamw(named_params, lr, weight_decay, betas=(0.9, 0.95)):
     decay, nodecay = [], []
     for _, param in named_params:
@@ -108,6 +94,17 @@ def cosine_lr(step, total_steps, warmup_steps, peak_lr, min_lr):
     if step <= warmup_steps:
         return peak_lr * step / max(1, warmup_steps)
     progress = min(1.0, (step - warmup_steps) / max(1, total_steps - warmup_steps))
+    return min_lr + 0.5 * (peak_lr - min_lr) * (1.0 + math.cos(math.pi * progress))
+
+
+def wsd_lr(step, total_steps, warmup_steps, decay_steps, peak_lr, min_lr):
+    """Warmup-Stable-Decay 调度：线性预热 -> 恒定峰值高速收敛 -> 末段余弦退火。"""
+    if step <= warmup_steps:
+        return peak_lr * step / max(1, warmup_steps)
+    decay_start = total_steps - decay_steps
+    if step <= decay_start:
+        return peak_lr
+    progress = min(1.0, (step - decay_start) / max(1, decay_steps))
     return min_lr + 0.5 * (peak_lr - min_lr) * (1.0 + math.cos(math.pi * progress))
 
 
@@ -149,20 +146,21 @@ def language_evaluate(model, tokens_np: np.ndarray, batch_size=16, utf8_bytes=No
 
 def pretrain(steps=5000, micro_batch=8, grad_accum=8, use_compile=True):
     seed_all()
-    save_environment()
     CHECKPOINTS.mkdir(exist_ok=True)
     tokenizer = Tokenizer.from_file(str(ROOT / 'tokenizer.json'))
     data_info = json.loads((ROOT / 'data_info.json').read_text())
     val_bytes = data_info['wiki']['validation'].get('utf8_bytes')
     test_bytes = data_info['wiki']['test'].get('utf8_bytes')
 
-    config = Config(vocab_size=tokenizer.get_vocab_size())
+    config = Config(vocab_size=tokenizer.get_vocab_size(), dropout=0.0)
     model = GPT(config).to(DEVICE)
     forward_model = torch.compile(model) if (use_compile and DEVICE.type == 'cuda') else model
 
     train_np = read_tokens_cpu('train')
     val_np = read_tokens_cpu('validation')
     batch_size = micro_batch * grad_accum
+    warmup_steps = max(1, min(200, steps // 10))
+    decay_steps = max(1, steps // 5)
     settings = dict(
         seed=SEED,
         max_steps=steps,
@@ -171,12 +169,14 @@ def pretrain(steps=5000, micro_batch=8, grad_accum=8, use_compile=True):
         effective_batch_size=batch_size,
         tokens_per_step=batch_size * config.context,
         context=config.context,
-        peak_lr=3e-4,
+        lr_schedule='WSD',
+        peak_lr=6e-4,
         minimum_lr=3e-5,
-        warmup_steps=200,
-        lr_decay_steps=steps,
+        warmup_steps=warmup_steps,
+        stable_steps=max(0, steps - warmup_steps - decay_steps),
+        decay_steps=decay_steps,
         validation_interval=250,
-        patience=4,
+        patience=6,
         weight_decay=0.1,
         grad_clip=1.0,
         optimizer='AdamW',
@@ -219,7 +219,7 @@ def pretrain(steps=5000, micro_batch=8, grad_accum=8, use_compile=True):
     save_gpt(model, CHECKPOINTS / 'pretrained.pt', step=0, validation_loss=stopper.best)
     rolling = []
     record['stop_reason'] = 'max_steps'
-    print(f"PRETRAIN {record['parameters']:,} parameters | corpus={len(train_np):,} tokens", flush=True)
+    print(f"PRETRAIN {record['parameters']:,} parameters | corpus={len(train_np):,} tokens | arch={config.arch}", flush=True)
 
     t_start = time.perf_counter()
     train_elapsed = 0.0
@@ -229,7 +229,13 @@ def pretrain(steps=5000, micro_batch=8, grad_accum=8, use_compile=True):
     for step in range(1, steps + 1):
         step_t0 = time.perf_counter()
         forward_model.train()
-        rate = cosine_lr(step, steps, settings['warmup_steps'], settings['peak_lr'], settings['minimum_lr'])
+        rate = wsd_lr(
+            step, steps,
+            settings['warmup_steps'],
+            settings['decay_steps'],
+            settings['peak_lr'],
+            settings['minimum_lr'],
+        )
         for group in optimizer.param_groups:
             group['lr'] = rate
         optimizer.zero_grad(set_to_none=True)
@@ -378,7 +384,7 @@ def classify_evaluate(model, dataset, batch_size=64):
         stop = min(start + batch_size, size)
         with autocast_ctx():
             logits = model(dataset['ids'][start:stop], dataset['lengths'][start:stop])
-            loss = nn.functional.cross_entropy(logits.float(), dataset['labels'][start:stop], reduction='sum')
+            loss = F.cross_entropy(logits.float(), dataset['labels'][start:stop], reduction='sum')
         losses += loss.item()
         probs = logits.float().softmax(-1)
         predictions += probs.argmax(-1).tolist()
@@ -388,18 +394,97 @@ def classify_evaluate(model, dataset, batch_size=64):
     return metrics, predictions, probabilities
 
 
-def finetune(epochs=10, micro_batch=32, grad_accum=2):
+@torch.no_grad()
+def init_verbalizer_head(model: SentimentModel, tokenizer: Tokenizer, train_dataset: dict, scale=0.5):
+    """利用预训练词表情感极性词向量初始化分类头，并用训练集先验均值校准初始偏置。"""
+    pos_words = (' good', ' great', ' positive', ' best', ' wonderful')
+    neg_words = (' bad', ' terrible', ' negative', ' worst', ' awful')
+    pos_ids = [tokenizer.encode(w).ids[0] for w in pos_words]
+    neg_ids = [tokenizer.encode(w).ids[0] for w in neg_words]
+    emb = model.backbone.token.weight.detach().float()
+    model.head.weight[0].copy_(scale * emb[neg_ids].mean(dim=0))
+    model.head.weight[1].copy_(scale * emb[pos_ids].mean(dim=0))
+    model.head.bias.zero_()
+
+    model.eval()
+    sample_n = min(512, len(train_dataset['labels']))
+    logits_list = []
+    for start in range(0, sample_n, 64):
+        stop = min(start + 64, sample_n)
+        with autocast_ctx():
+            logits_list.append(model(train_dataset['ids'][start:stop], train_dataset['lengths'][start:stop]).float())
+    mean_logit = torch.cat(logits_list, dim=0).mean(dim=0)
+    model.head.bias.copy_(-mean_logit)
+
+
+def build_finetune_param_groups(model: SentimentModel, spec: dict):
+    groups = [
+        dict(params=[model.head.weight], lr=spec['head_lr'], base_lr=spec['head_lr'], weight_decay=spec['weight_decay']),
+        dict(params=[model.head.bias], lr=spec['head_lr'], base_lr=spec['head_lr'], weight_decay=0.0),
+    ]
+    if spec['backbone_lr'] <= 0.0:
+        return groups
+
+    llrd = spec.get('llrd', 1.0)
+    num_layers = model.backbone.config.layers
+    base_lr = spec['backbone_lr']
+
+    if llrd == 1.0:
+        b_decay, b_nodecay = [], []
+        for _, p in model.backbone.named_parameters():
+            (b_decay if p.ndim >= 2 else b_nodecay).append(p)
+        groups.extend([
+            dict(params=b_decay, lr=base_lr, base_lr=base_lr, weight_decay=spec['weight_decay']),
+            dict(params=b_nodecay, lr=base_lr, base_lr=base_lr, weight_decay=0.0),
+        ])
+        return groups
+
+    # 逐层学习率衰减（LLRD）：顶层保持 base_lr，向下每层乘以 llrd
+    emb_lr = base_lr * (llrd ** num_layers)
+    groups.append(dict(
+        params=[model.backbone.token.weight],
+        lr=emb_lr,
+        base_lr=emb_lr,
+        weight_decay=spec['weight_decay'],
+    ))
+    if hasattr(model.backbone, 'position'):
+        groups.append(dict(
+            params=[model.backbone.position.weight],
+            lr=emb_lr,
+            base_lr=emb_lr,
+            weight_decay=spec['weight_decay'],
+        ))
+    for layer_idx, block in enumerate(model.backbone.blocks):
+        layer_lr = base_lr * (llrd ** (num_layers - 1 - layer_idx))
+        decay_p, nodecay_p = [], []
+        for _, p in block.named_parameters():
+            (decay_p if p.ndim >= 2 else nodecay_p).append(p)
+        if decay_p:
+            groups.append(dict(params=decay_p, lr=layer_lr, base_lr=layer_lr, weight_decay=spec['weight_decay']))
+        if nodecay_p:
+            groups.append(dict(params=nodecay_p, lr=layer_lr, base_lr=layer_lr, weight_decay=0.0))
+
+    norm_params = list(model.backbone.norm.parameters())
+    groups.append(dict(params=norm_params, lr=base_lr, base_lr=base_lr, weight_decay=0.0))
+    return groups
+
+
+def finetune(epochs=10, micro_batch=16, grad_accum=4):
     CHECKPOINTS.mkdir(exist_ok=True)
     tokenizer = Tokenizer.from_file(str(ROOT / 'tokenizer.json'))
     saved_meta = torch.load(CHECKPOINTS / 'pretrained.pt', map_location='cpu', weights_only=False)
-    config = Config(**saved_meta['config'])
+    raw_cfg = dict(saved_meta['config'])
+    if 'arch' not in raw_cfg:
+        raw_cfg['arch'] = 'gpt2'
+    config = Config(**raw_cfg)
     del saved_meta
+
     datasets = encode_reviews(tokenizer, config.context)
     batch_size = micro_batch * grad_accum
     variant_specs = {
-        'frozen': dict(backbone_lr=0.0, head_lr=1e-3, weight_decay=0.01),
-        'scratch': dict(backbone_lr=1e-4, head_lr=2e-4, weight_decay=0.01),
-        'full': dict(backbone_lr=2e-5, head_lr=2e-4, weight_decay=0.01),
+        'frozen': dict(backbone_lr=0.0, head_lr=5e-4, weight_decay=0.01, llrd=1.0, rdrop_alpha=0.0, verbalizer_init=True),
+        'scratch': dict(backbone_lr=1e-4, head_lr=2e-4, weight_decay=0.01, llrd=1.0, rdrop_alpha=0.5, verbalizer_init=False),
+        'full': dict(backbone_lr=3e-5, head_lr=1e-4, weight_decay=0.01, llrd=0.93, rdrop_alpha=0.5, verbalizer_init=True),
     }
     record = dict(
         seed=SEED,
@@ -410,7 +495,8 @@ def finetune(epochs=10, micro_batch=32, grad_accum=2):
         effective_batch_size=batch_size,
         grad_clip=1.0,
         warmup_ratio=0.1,
-        classification_pooling='last real token (EOS)',
+        finetune_dropout=0.1,
+        classification_pooling='last content token before EOS' if config.arch == 'qwen3' else 'last real token (EOS)',
         padded_sequence_length=datasets['train']['padded_length'],
         max_review_tokens=datasets['train']['max_sequence_length'],
         truncated={k: v['truncated'] for k, v in datasets.items()},
@@ -427,45 +513,42 @@ def finetune(epochs=10, micro_batch=32, grad_accum=2):
         spec = variant_specs[name]
         seed_all()
         if name == 'scratch':
-            backbone = GPT(config).to(DEVICE, dtype=torch.float32)
+            backbone = GPT(replace(config, dropout=0.1)).to(DEVICE, dtype=torch.float32)
+        elif name == 'frozen':
+            backbone, _ = load_gpt(CHECKPOINTS / 'pretrained.pt', DEVICE, dtype=torch.float32, dropout=0.0)
         else:
-            backbone, _ = load_gpt(CHECKPOINTS / 'pretrained.pt', DEVICE, dtype=torch.float32)
+            backbone, _ = load_gpt(CHECKPOINTS / 'pretrained.pt', DEVICE, dtype=torch.float32, dropout=0.1)
+
         torch.manual_seed(SEED + 10)
         model = SentimentModel(backbone).to(DEVICE, dtype=torch.float32)
+        if spec['verbalizer_init']:
+            init_verbalizer_head(model, tokenizer, train)
 
         if name == 'frozen':
             for parameter in model.backbone.parameters():
                 parameter.requires_grad = False
 
-        param_groups = [
-            dict(params=[model.head.weight], lr=spec['head_lr'], base_lr=spec['head_lr'], weight_decay=spec['weight_decay']),
-            dict(params=[model.head.bias], lr=spec['head_lr'], base_lr=spec['head_lr'], weight_decay=0.0),
-        ]
-        if name != 'frozen':
-            b_decay, b_nodecay = [], []
-            for _, p in model.backbone.named_parameters():
-                (b_decay if p.ndim >= 2 else b_nodecay).append(p)
-            param_groups.extend([
-                dict(params=b_decay, lr=spec['backbone_lr'], base_lr=spec['backbone_lr'], weight_decay=spec['weight_decay']),
-                dict(params=b_nodecay, lr=spec['backbone_lr'], base_lr=spec['backbone_lr'], weight_decay=0.0),
-            ])
-
+        param_groups = build_finetune_param_groups(model, spec)
         opt_kwargs = dict(betas=(0.9, 0.999))
         if DEVICE.type == 'cuda':
             opt_kwargs['fused'] = True
         optimizer = torch.optim.AdamW(param_groups, **opt_kwargs)
 
+        init_val = classify_evaluate(model, val)[0]
         variant = dict(
             hyperparameters=spec,
             history=[],
-            initial_validation=classify_evaluate(model, val)[0],
+            initial_validation=init_val,
             trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad),
             total_parameters=sum(p.numel() for p in model.parameters()),
         )
-        stopper = EarlyStopping(patience=record['patience'])
+        print(f"FINETUNE START {name} init_val_acc={init_val['accuracy']:.4f} init_val_loss={init_val['loss']:.4f}", flush=True)
+        stopper = EarlyStopping(patience=record['patience'], best=init_val['loss'])
+        save_classifier(model, CHECKPOINTS / f'{name}.pt', epoch=0, validation_loss=stopper.best, variant=name)
         variant['stop_reason'] = 'max_epochs'
         global_step = 0
         t0 = time.perf_counter()
+        rdrop_alpha = spec['rdrop_alpha']
 
         for epoch in range(1, epochs + 1):
             model.train()
@@ -486,11 +569,33 @@ def finetune(epochs=10, micro_batch=32, grad_accum=2):
                 total_in_step = len(batch_indices)
                 for sub_idx in sub_chunks:
                     weight = len(sub_idx) / total_in_step
+                    sub_ids = train['ids'][sub_idx]
+                    sub_lens = train['lengths'][sub_idx]
+                    sub_labels = train['labels'][sub_idx]
                     with autocast_ctx():
-                        logits = model(train['ids'][sub_idx], train['lengths'][sub_idx])
-                        loss = nn.functional.cross_entropy(logits.float(), train['labels'][sub_idx])
+                        if rdrop_alpha > 0.0:
+                            both_logits = model(
+                                torch.cat((sub_ids, sub_ids), dim=0),
+                                torch.cat((sub_lens, sub_lens), dim=0),
+                            ).float()
+                            logits1, logits2 = both_logits.chunk(2, dim=0)
+                            ce_loss = 0.5 * (
+                                F.cross_entropy(logits1, sub_labels)
+                                + F.cross_entropy(logits2, sub_labels)
+                            )
+                            lp1 = F.log_softmax(logits1, dim=-1)
+                            lp2 = F.log_softmax(logits2, dim=-1)
+                            kl_loss = 0.5 * (
+                                (lp1.exp() * (lp1 - lp2)).sum(dim=-1)
+                                + (lp2.exp() * (lp2 - lp1)).sum(dim=-1)
+                            ).mean()
+                            loss = ce_loss + rdrop_alpha * kl_loss
+                        else:
+                            logits1 = model(sub_ids, sub_lens).float()
+                            ce_loss = F.cross_entropy(logits1, sub_labels)
+                            loss = ce_loss
                     (loss * weight).backward()
-                    losses += loss.item() * len(sub_idx)
+                    losses += ce_loss.item() * len(sub_idx)
                     count += len(sub_idx)
                 nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step()
