@@ -5,7 +5,7 @@
 
 ## 一、快速运行与推理演示
 
-`inference.py` 支持自动下载模型权重与国内镜像源切换。克隆仓库并安装依赖后，首次执行命令会自动将所需权重（`bfloat16` 格式，单文件约 985 MiB）下载至 `checkpoints/` 目录，支持 CPU、CUDA、ROCm 与 Apple MPS 运行。
+`inference.py` 支持自动下载模型权重与国内镜像源切换。为便于直接展示最优模型效果并节约下载与测试时间，Release 页面仅提供 516M Qwen3 架构的模型权重（`bfloat16` 格式，单文件约 985 MiB）。克隆仓库并安装依赖后，首次执行命令会自动将所需权重下载至 `checkpoints/` 目录，支持 CPU、CUDA、ROCm 与 Apple MPS 运行。
 
 ```bash
 git clone https://github.com/LHX369963/embodied-intelligence-homework3.git
